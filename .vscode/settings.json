@@ -1,0 +1,18 @@
+{
+  "latex-workshop.latex.tools": [
+    {
+      "name": "tectonic",
+      "command": "/opt/homebrew/bin/tectonic",
+      "args": ["--synctex", "--keep-logs", "--outdir", "%OUTDIR%", "%DOC%"]
+    }
+  ],
+  "latex-workshop.latex.recipes": [
+    { "name": "Tectonic", "tools": ["tectonic"] }
+  ],
+  "latex-workshop.latex.recipe.default": "first",
+  "latex-workshop.latex.outDir": "%DIR%",
+  "latex-workshop.latex.autoBuild.run": "onSave",
+  "latex-workshop.view.pdf.viewer": "tab",
+  "python.defaultInterpreterPath": "${workspaceFolder}/.conda/miniconda/envs/cs229/bin/python",
+  "python.condaPath": "${workspaceFolder}/.conda/miniconda/bin/conda"
+}
