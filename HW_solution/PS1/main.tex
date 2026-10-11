@@ -13,6 +13,7 @@
 \usepackage{fancyhdr}
 \usepackage{times}
 \usepackage{mathtools}
+\usepackage{xcolor}
 
 % ------------------------------------------------------------
 % Header
@@ -164,9 +165,10 @@ positive semi-definite, written $H\succeq0$.
 This implies that $J$ is convex, and has no local minima other than
 the global one. If you have some other way of showing $H\succeq0$,
 you are also welcome to use your method instead of the one above.
+\vspace{5mm}
 
 % Solution to 1(a) will go here.
-\textbf{Solution.}
+\noindent\colorbox{yellow}{\textbf{Solution.}}
 
 Let
 \[
@@ -406,78 +408,204 @@ where
 are appropriate functions of $\phi,\Sigma,\mu_0,$ and $\mu_1$.
 
 % Solution to 1(c) will go here.
+\vspace{5mm}
+\noindent\colorbox{yellow}{\textbf{Solution.}}
 
+By Bayes' rule,
+\[
+\begin{aligned}
+p(y=1\mid x)
+&=
+\frac{p(x\mid y=1)P(y=1)}{p(x)}
+\\[4pt]
+&=
+\frac{p(x\mid y=1)P(y=1)}
+{p(x\mid y=1)P(y=1)+p(x\mid y=0)P(y=0)}.
+\end{aligned}
+\]
+
+Substituting the Gaussian densities, we obtain
+\[
+\begin{aligned}
+p(y=1\mid x)
+=
+\frac{
+\phi \exp\left(
+-\frac12(x-\mu_1)^T\Sigma^{-1}(x-\mu_1)
+\right)
+}{
+\begin{aligned}
+&\phi \exp\left(
+-\frac12(x-\mu_1)^T\Sigma^{-1}(x-\mu_1)
+\right)
+\\
+&+(1-\phi)\exp\left(
+-\frac12(x-\mu_0)^T\Sigma^{-1}(x-\mu_0)
+\right)
+\end{aligned}
+}.
+\end{aligned}
+\]
+
+Dividing the numerator and denominator by the numerator,
+\[
+p(y=1\mid x)
+=
+\frac{1}{
+1+\dfrac{1-\phi}{\phi}
+\exp\left(
+-\frac12
+\left[
+(x-\mu_0)^T\Sigma^{-1}(x-\mu_0)
+-
+(x-\mu_1)^T\Sigma^{-1}(x-\mu_1)
+\right]
+\right)
+}.
+\]
+
+Let $\Omega=\Sigma^{-1}$. Since $\Sigma$ is symmetric,
+its inverse $\Omega$ is also symmetric.
+
+Now consider the difference of the quadratic forms:
+\[
+\begin{aligned}
+& (x-\mu_0)^T\Omega(x-\mu_0)
+-(x-\mu_1)^T\Omega(x-\mu_1)
+\\[4pt]
+={}&
+(x^T-\mu_0^T)\Omega(x-\mu_0)
+-(x^T-\mu_1^T)\Omega(x-\mu_1)
+\\[4pt]
+={}&
+x^T\Omega x
+-x^T\Omega\mu_0
+-\mu_0^T\Omega x
++\mu_0^T\Omega\mu_0
+\\
+&-x^T\Omega x
++x^T\Omega\mu_1
++\mu_1^T\Omega x
+-\mu_1^T\Omega\mu_1.
+\end{aligned}
+\]
+
+Using the symmetry of $\Omega$, we have
+\[
+\mu_i^T\Omega x=x^T\Omega\mu_i.
+\]
+
+Hence,
+\[
+\begin{aligned}
+& (x-\mu_0)^T\Omega(x-\mu_0)
+-(x-\mu_1)^T\Omega(x-\mu_1)
+\\[4pt]
+={}&
+2x^T\Omega(\mu_1-\mu_0)
++\mu_0^T\Omega\mu_0
+-\mu_1^T\Omega\mu_1.
+\end{aligned}
+\]
+
+Substituting this expression back into the posterior,
+\[
+\begin{aligned}
+p(y=1\mid x)
+=
+\frac{1}{
+1+\dfrac{1-\phi}{\phi}
+\exp\left(
+-x^T\Omega(\mu_1-\mu_0)
+-\frac12\mu_0^T\Omega\mu_0
++\frac12\mu_1^T\Omega\mu_1
+\right)
+}.
+\end{aligned}
+\]
+
+Since
+\[
+\frac{1-\phi}{\phi}
+=
+\exp\left(-\log\frac{\phi}{1-\phi}\right),
+\]
+we may rewrite the posterior as
+\[
+p(y=1\mid x)
+=
+\frac{1}{
+1+\exp\left(
+-\left[
+x^T\Omega(\mu_1-\mu_0)
++\frac12\mu_0^T\Omega\mu_0
+-\frac12\mu_1^T\Omega\mu_1
++\log\frac{\phi}{1-\phi}
+\right]
+\right)
+}.
+\]
+
+Therefore, defining
+\[
+\boxed{
+\theta=\Sigma^{-1}(\mu_1-\mu_0)
+}
+\]
+and
+\[
+\boxed{
+\theta_0
+=
+\frac12\mu_0^T\Sigma^{-1}\mu_0
+-\frac12\mu_1^T\Sigma^{-1}\mu_1
++\log\frac{\phi}{1-\phi},
+}
+\]
+we conclude that
+\[
+\boxed{
+p(y=1\mid x)
+=
+\frac{1}{1+\exp(-(\theta^Tx+\theta_0))}.
+}
+\]
+
+\hfill$\square$
 % ------------------------------------------------------------
 % 1(d)
 % ------------------------------------------------------------
 
 \item \textbf{[7 points]}
 
-For this part of the problem only, you may assume $n$ (the dimension
-of $x$) is $1$, so that
-\[
-\Sigma=[\sigma^2]
-\]
-is just a real number, and likewise the determinant of $\Sigma$ is
-given by
-\[
-|\Sigma|=\sigma^2.
-\]
+In this problem, we derive the maximum likelihood estimators
+for Gaussian Discriminant Analysis (GDA), first in one
+dimension and then in arbitrary finite dimensions.
 
-Given the dataset, we claim that the maximum likelihood estimates of
-the parameters are given by
+Let
 \[
-\phi
+\mathcal{D}
 =
-\frac{1}{m}
-\sum_{i=1}^{m}
-\ind\{y^{(i)}=1\},
+\left\{(x^{(i)},y^{(i)})\right\}_{i=1}^{m}
 \]
+be a dataset consisting of $m$ independent observations,
+where $x^{(i)}\in\mathbb{R}^{n}$ and $y^{(i)}\in\{0,1\}$.
+
+Recall that under the GDA model,
 \[
-\mu_0
+p(y^{(i)};\phi)
 =
-\frac{
-\sum_{i=1}^{m}
-\ind\{y^{(i)}=0\}x^{(i)}
-}{
-\sum_{i=1}^{m}
-\ind\{y^{(i)}=0\}
-},
-\]
-\[
-\mu_1
-=
-\frac{
-\sum_{i=1}^{m}
-\ind\{y^{(i)}=1\}x^{(i)}
-}{
-\sum_{i=1}^{m}
-\ind\{y^{(i)}=1\}
-},
+\phi^{y^{(i)}}(1-\phi)^{1-y^{(i)}},
 \]
 and
 \[
-\Sigma
-=
-\frac{1}{m}
-\sum_{i=1}^{m}
-\left(
-x^{(i)}-\mu_{y^{(i)}}
-\right)
-\left(
-x^{(i)}-\mu_{y^{(i)}}
-\right)^T.
+X\mid Y=k
+\sim
+\mathcal{N}(\mu_k,\Sigma),
+\qquad k\in\{0,1\}.
 \]
 
-The log-likelihood of the data is
-\[
-\ell(\phi,\mu_0,\mu_1,\Sigma)
-=
-\log
-\prod_{i=1}^{m}
-p(x^{(i)},y^{(i)};\phi,\mu_0,\mu_1,\Sigma),
-\]
-which can be written as
+The log-likelihood of the observations is
 \[
 \ell(\phi,\mu_0,\mu_1,\Sigma)
 =
@@ -487,16 +615,1127 @@ p(x^{(i)}\mid y^{(i)};\mu_0,\mu_1,\Sigma)
 p(y^{(i)};\phi).
 \]
 
-By maximizing $\ell$ with respect to the four parameters, prove that
-the maximum likelihood estimates of
-$\phi,\mu_0,\mu_1,$ and $\Sigma$ are indeed as given in the formulas
-above.
+You may assume that the dataset contains at least
+one positive and one negative example.
 
-You may assume that there is at least one positive and one negative
-example, so that the denominators in the definitions of $\mu_0$ and
-$\mu_1$ above are non-zero.
+\medskip
+\noindent\textbf{(i) The One-Dimensional Case.}
 
+Suppose first that $n=1$, so that
+\[
+\mu_0,\mu_1\in\mathbb{R},
+\qquad
+\Sigma=[\sigma^2],
+\qquad
+\sigma^2>0.
+\]
+
+By expanding the log-likelihood and applying ordinary
+differentiation, show that the maximum likelihood
+estimators of $\phi$ and $\mu_k$ are given by
+\[
+\boxed{
+\hat{\phi}
+=
+\frac{1}{m}
+\sum_{i=1}^{m}
+\ind{y^{(i)}=1}
+}
+\]
+and
+\[
+\boxed{
+\hat{\mu}_k
+=
+\frac{
+\sum_{i=1}^{m}
+\ind{y^{(i)}=k}x^{(i)}
+}{
+\sum_{i=1}^{m}
+\ind{y^{(i)}=k}
+},
+\qquad k\in\{0,1\}.
+}
+\]
+
+Now write $v=\sigma^2$ and define
+\[
+s
+=
+\frac{1}{m}
+\sum_{i=1}^{m}
+\left(
+x^{(i)}-\hat{\mu}_{y^{(i)}}
+\right)^2.
+\]
+
+Show that, after maximizing over the mean parameters,
+the terms in the log-likelihood which depend on $v$
+can be expressed as
+\[
+\ell(v)
+=
+-\frac{m}{2}
+\left(
+\log v+\frac{s}{v}
+\right)
++\text{constant}.
+\]
+
+Assuming $s>0$, determine the value of $v$
+which maximizes this expression, and hence prove that
+\[
+\boxed{
+\hat{\sigma}^2
+=
+\frac{1}{m}
+\sum_{i=1}^{m}
+\left(
+x^{(i)}-\hat{\mu}_{y^{(i)}}
+\right)^2.
+}
+\]
+
+\medskip
+\noindent\textbf{(ii) Generalization to Arbitrary Dimensions.}
+
+Suppose now that $n$ is an arbitrary positive integer,
+so that
+\[
+x^{(i)},\mu_0,\mu_1\in\mathbb{R}^{n},
+\qquad
+\Sigma\in\mathbb{R}^{n\times n},
+\]
+where $\Sigma$ is symmetric positive definite.
+
+By choosing an appropriate change of variable, define the \emph{precision matrix}
+\[
+\boxed{
+K = ? .
+}
+\]
+
+Show that the log-likelihood can be expressed as
+\[
+\begin{aligned}
+\ell(\phi,\mu_0,\mu_1,K)
+={}&
+\sum_{i=1}^{m}
+\left[
+y^{(i)}\log\phi
++
+(1-y^{(i)})\log(1-\phi)
+\right]
+\\[4pt]
+&+
+\frac{m}{2}\log\det K
+\\[4pt]
+&-
+\frac{1}{2}
+\sum_{i=1}^{m}
+(x^{(i)}-\mu_{y^{(i)}})^T
+K
+(x^{(i)}-\mu_{y^{(i)}})
+\\[4pt]
+&+\text{constant}.
+\end{aligned}
+\]
+
+For $k\in\{0,1\}$, define
+\[
+m_k
+=
+\sum_{i=1}^{m}
+\ind{y^{(i)}=k}.
+\]
+
+By differentiating the log-likelihood with respect
+to the mean vectors, show that
+\[
+\boxed{
+\nabla_{\mu_k}\ell
+=
+K
+\left(
+\sum_{i:y^{(i)}=k}x^{(i)}
+-
+m_k\mu_k
+\right).
+}
+\]
+
+Hence, by applying the first-order optimality
+condition, deduce that
+\[
+\boxed{
+\hat{\mu}_k
+=
+\frac{
+\sum_{i=1}^{m}
+\ind{y^{(i)}=k}x^{(i)}
+}{
+\sum_{i=1}^{m}
+\ind{y^{(i)}=k}
+},
+\qquad k\in\{0,1\}.
+}
+\]
+
+Verify that these stationary points maximize
+the log-likelihood with respect to the
+mean parameters.
+\vspace{3mm}
+
+Now define the residual vectors
+\[
+r_i
+=
+x^{(i)}-\hat{\mu}_{y^{(i)}}
+\]
+and the scatter matrix
+\[
+\boxed{
+S
+=
+\sum_{i=1}^{m}r_ir_i^T.
+}
+\]
+
+\noindent\colorbox{yellow!50}{\textbf{Assume that $S$ is positive definite.}}
+
+By expressing the quadratic terms using
+the trace of a matrix, show that the
+log-likelihood, as a function of $K$,
+can be written as
+\[
+\boxed{
+\ell(K)
+=
+\frac{m}{2}\log\det K
+-
+\frac{1}{2}\operatorname{tr}(KS)
++\text{constant}.
+}
+\]
+
+Recall the following matrix differentiation identities:
+\[
+\nabla_A\operatorname{tr}(AB)
+=
+B^T,
+\]
+and, for an invertible matrix $A$,
+\[
+\nabla_A\det A
+=
+\det(A)(A^{-1})^T.
+\]
+
+By applying the chain rule, deduce that
+for a symmetric positive definite matrix $A$,
+\[
+\boxed{
+\nabla_A\log\det A
+=
+(A^{-1})^T.
+}
+\]
+
+Hence, by differentiating the log-likelihood
+with respect to the precision matrix $K$, show that
+\[
+\boxed{
+\nabla_K\ell
+=
+\frac{1}{2}
+\left(
+mK^{-1}-S
+\right).
+}
+\]
+
+By applying the first-order optimality condition,
+show that
+\[
+K^{-1}
+=
+\frac{1}{m}S.
+\]
+
+You may use the fact that $\log\det K$
+is strictly concave on the set of symmetric
+positive definite matrices.
+
+Explain why this implies that the stationary
+point is the unique global maximizer
+of the log-likelihood.
+
+Finally, recalling that $K=\Sigma^{-1}$,
+deduce that
+\[
+\boxed{
+\hat{\Sigma}
+=
+\frac{1}{m}
+\sum_{i=1}^{m}
+\left(
+x^{(i)}-\hat{\mu}_{y^{(i)}}
+\right)
+\left(
+x^{(i)}-\hat{\mu}_{y^{(i)}}
+\right)^T.
+}
+\]
+
+Conclude that the maximum likelihood estimators
+obtained in part (i) extend to arbitrary finite
+dimensions, provided that the empirical residual
+covariance matrix is positive definite.
 % Solution to 1(d) will go here.
+
+% ------------------------------------------------------------
+% Solution to 1(d)
+% ------------------------------------------------------------
+
+\medskip
+\noindent\colorbox{yellow}{\textbf{Solution.}}
+
+\medskip
+\noindent\colorbox{yellow!20}{\textbf{(i) The One-Dimensional Case.}}
+
+Suppose that $n=1$, so that
+$\mu_0,\mu_1\in\mathbb{R}$ and
+$\Sigma=[\sigma^2]$.
+
+Write $v=\sigma^2>0$.
+
+By the assumptions of GDA,
+\[
+p(y^{(i)};\phi)
+=
+\phi^{y^{(i)}}(1-\phi)^{1-y^{(i)}},
+\]
+and
+\[
+p(x^{(i)}\mid y^{(i)})
+=
+\frac{1}{\sqrt{2\pi v}}
+\exp\left(
+-\frac{
+(x^{(i)}-\mu_{y^{(i)}})^2
+}{2v}
+\right).
+\]
+
+Since the training observations are independent,
+the log-likelihood is
+\[
+\begin{aligned}
+\ell(\phi,\mu_0,\mu_1,v)
+={}&
+\sum_{i=1}^{m}
+\log\left[
+p(x^{(i)}\mid y^{(i)})
+p(y^{(i)})
+\right]
+\\[4pt]
+={}&
+\sum_{i=1}^{m}
+\left[
+y^{(i)}\log\phi
++
+(1-y^{(i)})\log(1-\phi)
+\right]
+\\[4pt]
+&-
+\frac{m}{2}\log(2\pi)
+-
+\frac{m}{2}\log v
+\\[4pt]
+&-
+\frac{1}{2v}
+\sum_{i=1}^{m}
+(x^{(i)}-\mu_{y^{(i)}})^2.
+\end{aligned}
+\]
+
+We maximize the log-likelihood with respect to
+$\phi$, $\mu_0$, $\mu_1$, and $v$.
+
+\medskip
+\noindent\colorbox{blue!20}{\textbf{Estimation of $\phi$.}}
+
+Define
+\[
+m_k
+=
+\sum_{i=1}^{m}
+\ind{y^{(i)}=k},
+\qquad k\in\{0,1\},
+\]
+so that $m_0+m_1=m$.
+
+The terms depending on $\phi$ are
+\[
+\ell_\phi
+=
+m_1\log\phi+m_0\log(1-\phi).
+\]
+
+Differentiating with respect to $\phi$,
+\[
+\frac{\partial\ell}{\partial\phi}
+=
+\frac{m_1}{\phi}
+-
+\frac{m_0}{1-\phi}.
+\]
+
+By the first-order optimality condition,
+\[
+\begin{aligned}
+\frac{m_1}{\phi}
+-
+\frac{m_0}{1-\phi}
+&=0,
+\\[4pt]
+m_1(1-\phi)
+&=m_0\phi,
+\\[4pt]
+m_1
+&=(m_0+m_1)\phi
+=m\phi.
+\end{aligned}
+\]
+
+Therefore,
+\[
+\boxed{
+\hat{\phi}
+=
+\frac{m_1}{m}
+=
+\frac{1}{m}
+\sum_{i=1}^{m}
+\ind{y^{(i)}=1}.
+}
+\]
+
+Moreover,
+\[
+\frac{\partial^2\ell}{\partial\phi^2}
+=
+-\frac{m_1}{\phi^2}
+-
+\frac{m_0}{(1-\phi)^2}
+<0.
+\]
+
+Hence, the log-likelihood is strictly concave
+in $\phi$, and the stationary point is its
+unique global maximum.
+
+\medskip
+\noindent\colorbox{blue!20}{\textbf{Estimation of $\mu_0$ and $\mu_1$.}}
+
+For $k\in\{0,1\}$, the terms depending on
+$\mu_k$ are
+\[
+\ell_{\mu_k}
+=
+-\frac{1}{2v}
+\sum_{i:y^{(i)}=k}
+(x^{(i)}-\mu_k)^2.
+\]
+
+Differentiating with respect to $\mu_k$,
+\[
+\begin{aligned}
+\frac{\partial\ell}{\partial\mu_k}
+&=
+-\frac{1}{2v}
+\sum_{i:y^{(i)}=k}
+2(x^{(i)}-\mu_k)(-1)
+\\[4pt]
+&=
+\frac{1}{v}
+\sum_{i:y^{(i)}=k}
+(x^{(i)}-\mu_k).
+\end{aligned}
+\]
+
+Setting the derivative equal to zero,
+\[
+\begin{aligned}
+\sum_{i:y^{(i)}=k}
+(x^{(i)}-\mu_k)
+&=0,
+\\[4pt]
+\sum_{i:y^{(i)}=k}x^{(i)}
+&=m_k\mu_k.
+\end{aligned}
+\]
+
+Thus,
+\[
+\boxed{
+\hat{\mu}_k
+=
+\frac{1}{m_k}
+\sum_{i:y^{(i)}=k}x^{(i)}
+=
+\frac{
+\sum_{i=1}^{m}
+\ind{y^{(i)}=k}x^{(i)}
+}{
+\sum_{i=1}^{m}
+\ind{y^{(i)}=k}
+}.
+}
+\]
+
+Furthermore,
+\[
+\frac{\partial^2\ell}{\partial\mu_k^2}
+=
+-\frac{m_k}{v}<0.
+\]
+
+Therefore, each stationary point is the
+unique maximizer with respect to $\mu_k$.
+
+Notice that the optimal mean parameters do
+not depend on the value of $v$.
+
+\medskip
+\noindent\colorbox{blue!20}{\textbf{Estimation of $\sigma^2$.}}
+
+
+Substituting the maximum likelihood estimates
+of the mean parameters, define
+\[
+s
+=
+\frac{1}{m}
+\sum_{i=1}^{m}
+(x^{(i)}-\hat{\mu}_{y^{(i)}})^2.
+\]
+
+The terms depending on $v$ become
+\[
+\begin{aligned}
+\ell(v)
+&=
+-\frac{m}{2}\log v
+-
+\frac{1}{2v}
+\sum_{i=1}^{m}
+(x^{(i)}-\hat{\mu}_{y^{(i)}})^2
++C
+\\[4pt]
+&=
+-\frac{m}{2}
+\left(
+\log v+\frac{s}{v}
+\right)+C,
+\end{aligned}
+\]
+where $C$ is independent of $v$.
+
+Differentiating,
+\[
+\begin{aligned}
+\ell'(v)
+&=
+-\frac{m}{2}
+\left(
+\frac{1}{v}-\frac{s}{v^2}
+\right)
+\\[4pt]
+&=
+\frac{m(s-v)}{2v^2}.
+\end{aligned}
+\]
+
+The first-order optimality condition gives
+\[
+\ell'(v)=0
+\quad\Longleftrightarrow\quad
+v=s.
+\]
+
+Since $s>0$ and $v>0$,
+\[
+\ell'(v)
+\begin{cases}
+>0, & 0<v<s,\\
+=0, & v=s,\\
+<0, & v>s.
+\end{cases}
+\]
+
+Hence, $v=s$ is the unique global maximizer.
+
+Recalling that $v=\sigma^2$, we obtain
+\[
+\boxed{
+\hat{\sigma}^2
+=
+\frac{1}{m}
+\sum_{i=1}^{m}
+(x^{(i)}-\hat{\mu}_{y^{(i)}})^2.
+}
+\]
+This completes part (i).
+
+\medskip
+
+\noindent\colorbox{yellow!20}{\textbf{(ii) Generalization to Arbitrary Dimensions.}}
+
+Now suppose that $n$ is an arbitrary positive
+integer, with
+\[
+x^{(i)},\mu_0,\mu_1\in\mathbb{R}^{n},
+\qquad
+\Sigma\in\mathbb{R}^{n\times n},
+\qquad
+\Sigma\succ0.
+\]
+
+Make a change of variable: define the precision matrix
+\[
+\boxed{
+K=\Sigma^{-1}.
+}
+\]
+
+Since $\Sigma$ is symmetric positive definite,
+$K$ is also symmetric positive definite. Note that $K$ and $\Sigma^{-1}$ is bijective,
+hence optimizing $l$ w.r.t. $\Sigma^{-1}$ is equivalent of optimizing l w.r.t. $K$
+
+\medskip
+\noindent\textbf{The Multivariate Log-Likelihood.}
+
+Recall that
+\[
+p(x^{(i)}\mid y^{(i)})
+=
+\frac{1}{
+(2\pi)^{n/2}|\Sigma|^{1/2}
+}
+\exp\left(
+-\frac{1}{2}
+(x^{(i)}-\mu_{y^{(i)}})^T
+\Sigma^{-1}
+(x^{(i)}-\mu_{y^{(i)}})
+\right).
+\]
+
+Taking logarithms and substituting
+$K=\Sigma^{-1}$, we obtain
+\[
+\begin{aligned}
+\ell(\phi,\mu_0,\mu_1,K)
+={}&
+\sum_{i=1}^{m}
+\left[
+y^{(i)}\log\phi
++
+(1-y^{(i)})\log(1-\phi)
+\right]
+\\[4pt]
+&-
+\frac{mn}{2}\log(2\pi)
+-
+\frac{m}{2}\log\det\Sigma
+\\[4pt]
+&-
+\frac{1}{2}
+\sum_{i=1}^{m}
+(x^{(i)}-\mu_{y^{(i)}})^T
+K
+(x^{(i)}-\mu_{y^{(i)}}).
+\end{aligned}
+\]
+
+Since
+\[
+\log\det\Sigma
+=
+-\log\det K,
+\]
+we may rewrite this as
+\[
+\boxed{
+\begin{aligned}
+\ell(\phi,\mu_0,\mu_1,K)
+={}&
+\sum_{i=1}^{m}
+\left[
+y^{(i)}\log\phi
++
+(1-y^{(i)})\log(1-\phi)
+\right]
+\\[4pt]
+&+
+\frac{m}{2}\log\det K
+\\[4pt]
+&-
+\frac{1}{2}
+\sum_{i=1}^{m}
+(x^{(i)}-\mu_{y^{(i)}})^T
+K
+(x^{(i)}-\mu_{y^{(i)}})
++C,
+\end{aligned}
+}
+\]
+where $C=-\frac{mn}{2}\log(2\pi)$.
+
+The terms involving $\phi$ are identical
+to those in part (i). Therefore,
+\[
+\boxed{
+\hat{\phi}
+=
+\frac{1}{m}
+\sum_{i=1}^{m}
+\ind{y^{(i)}=1}.
+}
+\]
+
+\medskip
+\noindent\colorbox{blue!20}{\textbf{Estimation of the Mean Vectors.}}
+
+For $k\in\{0,1\}$, consider the terms
+depending on $\mu_k$:
+\[
+\ell_{\mu_k}
+=
+-\frac{1}{2}
+\sum_{i:y^{(i)}=k}
+(x^{(i)}-\mu_k)^T
+K
+(x^{(i)}-\mu_k).
+\]
+
+Recall that for a symmetric matrix $A$,
+\[
+\nabla_u
+\left[
+(x-u)^TA(x-u)
+\right]
+=
+2A(u-x).
+\]
+
+Since $K$ is symmetric,
+\[
+\begin{aligned}
+\nabla_{\mu_k}\ell
+&=
+-\frac{1}{2}
+\sum_{i:y^{(i)}=k}
+2K(\mu_k-x^{(i)})
+\\[4pt]
+&=
+K
+\sum_{i:y^{(i)}=k}
+(x^{(i)}-\mu_k)
+\\[4pt]
+&=
+K
+\left(
+\sum_{i:y^{(i)}=k}x^{(i)}
+-
+m_k\mu_k
+\right).
+\end{aligned}
+\]
+
+Hence,
+\[
+\boxed{
+\nabla_{\mu_k}\ell
+=
+K
+\left(
+\sum_{i:y^{(i)}=k}x^{(i)}
+-
+m_k\mu_k
+\right).
+}
+\]
+
+Applying the first-order optimality condition,
+\[
+K
+\left(
+\sum_{i:y^{(i)}=k}x^{(i)}
+-
+m_k\mu_k
+\right)
+=0.
+\]
+
+Since $K\succ0$, it is invertible.
+Therefore,
+\[
+\sum_{i:y^{(i)}=k}x^{(i)}
+-
+m_k\mu_k
+=0.
+\]
+
+Consequently,
+\[
+\boxed{
+\hat{\mu}_k
+=
+\frac{
+\sum_{i=1}^{m}
+\ind{y^{(i)}=k}x^{(i)}
+}{
+\sum_{i=1}^{m}
+\ind{y^{(i)}=k}
+},
+\qquad k\in\{0,1\}.
+}
+\]
+
+Moreover, the Hessian with respect
+to $\mu_k$ is
+\[
+\boxed{
+\nabla_{\mu_k}^{2}\ell
+=
+-m_kK.
+}
+\]
+
+Since $m_k>0$ and $K\succ0$,
+\[
+-m_kK\prec0.
+\]
+
+Thus, the log-likelihood is strictly concave
+in $\mu_k$, and the stationary point is its
+unique maximizer for every fixed $K\succ0$.
+
+In particular, the maximum likelihood
+estimators of the mean vectors are
+independent of the feature dimension $n$.
+
+\medskip
+\noindent\colorbox{blue!20}{\textbf{Estimation of the Covariance Matrix.}}
+
+Having obtained the maximum likelihood
+estimates of the mean vectors, define
+\[
+r_i
+=
+x^{(i)}-\hat{\mu}_{y^{(i)}}
+\]
+and the scatter matrix
+\[
+\boxed{
+S
+=
+\sum_{i=1}^{m}r_ir_i^T.
+}
+\]
+
+The terms depending on $K$ are
+\[
+\ell(K)
+=
+\frac{m}{2}\log\det K
+-
+\frac{1}{2}
+\sum_{i=1}^{m}r_i^TKr_i
++C.
+\]
+
+Since each quadratic form is a scalar,
+we have
+\[
+\begin{aligned}
+r_i^TKr_i
+&=
+\operatorname{tr}(r_i^TKr_i)
+\\[4pt]
+&=
+\operatorname{tr}(Kr_ir_i^T),
+\end{aligned}
+\]
+where the second equality follows
+from the cyclic property of the trace.
+
+Therefore,
+\[
+\begin{aligned}
+\sum_{i=1}^{m}r_i^TKr_i
+&=
+\sum_{i=1}^{m}
+\operatorname{tr}(Kr_ir_i^T)
+\\[4pt]
+&=
+\operatorname{tr}
+\left(
+K\sum_{i=1}^{m}r_ir_i^T
+\right)
+\\[4pt]
+&=
+\operatorname{tr}(KS).
+\end{aligned}
+\]
+
+Hence,
+\[
+\boxed{
+\ell(K)
+=
+\frac{m}{2}\log\det K
+-
+\frac{1}{2}\operatorname{tr}(KS)
++C.
+}
+\]
+
+We now differentiate with respect to
+the precision matrix $K$.
+
+Recall the established matrix calculus identities
+\[
+\nabla_A\operatorname{tr}(AB)=B^T
+\]
+and
+\[
+\nabla_A\det A
+=
+\det(A)(A^{-1})^T.
+\]
+
+By the chain rule,
+\[
+\begin{aligned}
+\nabla_A\log\det A
+&=
+\frac{1}{\det A}
+\nabla_A\det A
+\\[4pt]
+&=
+\frac{1}{\det A}
+\det(A)(A^{-1})^T
+\\[4pt]
+&=
+(A^{-1})^T.
+\end{aligned}
+\]
+
+Thus,
+\[
+\boxed{
+\nabla_A\log\det A
+=
+(A^{-1})^T.
+}
+\]
+
+Applying these identities to the log-likelihood,
+\[
+\begin{aligned}
+\nabla_K\ell
+&=
+\frac{m}{2}
+\nabla_K\log\det K
+-
+\frac{1}{2}
+\nabla_K\operatorname{tr}(KS)
+\\[6pt]
+&=
+\frac{m}{2}(K^{-1})^T
+-
+\frac{1}{2}S^T.
+\end{aligned}
+\]
+
+Since $K$ and $S$ are symmetric,
+\[
+(K^{-1})^T=K^{-1},
+\qquad
+S^T=S.
+\]
+
+Therefore,
+\[
+\boxed{
+\nabla_K\ell
+=
+\frac{1}{2}
+\left(
+mK^{-1}-S
+\right).
+}
+\]
+
+Applying the first-order optimality condition,
+\[
+\nabla_K\ell=0,
+\]
+we obtain
+\[
+\begin{aligned}
+mK^{-1}-S
+&=0,
+\\[4pt]
+mK^{-1}
+&=S,
+\\[4pt]
+K^{-1}
+&=\frac{1}{m}S.
+\end{aligned}
+\]
+
+Recalling that $K=\Sigma^{-1}$,
+we conclude that
+\[
+\boxed{
+\hat{\Sigma}
+=
+\frac{1}{m}S.
+}
+\]
+
+Substituting the definition of $S$,
+\[
+\boxed{
+\hat{\Sigma}
+=
+\frac{1}{m}
+\sum_{i=1}^{m}
+\left(
+x^{(i)}-\hat{\mu}_{y^{(i)}}
+\right)
+\left(
+x^{(i)}-\hat{\mu}_{y^{(i)}}
+\right)^T.
+}
+\]
+
+\medskip
+\noindent\textbf{Verification of Global Maximality.}
+
+It remains to verify that the stationary point
+is a global maximizer.
+
+Recall that
+\[
+\ell(K)
+=
+\frac{m}{2}\log\det K
+-
+\frac{1}{2}\operatorname{tr}(KS)
++C.
+\]
+
+The function
+\[
+K\longmapsto\log\det K
+\]
+is strictly concave on the set of symmetric
+positive definite matrices.
+
+Furthermore,
+\[
+K\longmapsto\operatorname{tr}(KS)
+\]
+is linear in $K$.
+
+Consequently, $\ell(K)$ is strictly concave
+on the convex set of symmetric positive
+definite matrices.
+
+By assumption, $S\succ0$. Therefore,
+\[
+K^*
+=
+mS^{-1}
+\]
+exists and is positive definite.
+
+Moreover,
+\[
+\nabla_K\ell(K^*)=0.
+\]
+
+Since $\ell$ is strictly concave,
+this stationary point is its unique
+global maximizer.
+
+Hence,
+\[
+\boxed{
+\hat{\Sigma}
+=
+(K^*)^{-1}
+=
+\frac{1}{m}S.
+}
+\]
+
+\medskip
+\noindent\textbf{Conclusion.}
+
+Combining the results of parts (i) and (ii),
+the maximum likelihood estimators of the
+GDA parameters are
+\[
+\boxed{
+\begin{aligned}
+\hat{\phi}
+&=
+\frac{1}{m}
+\sum_{i=1}^{m}
+\ind{y^{(i)}=1},
+\\[10pt]
+\hat{\mu}_0
+&=
+\frac{
+\sum_{i=1}^{m}
+\ind{y^{(i)}=0}x^{(i)}
+}{
+\sum_{i=1}^{m}
+\ind{y^{(i)}=0}
+},
+\\[10pt]
+\hat{\mu}_1
+&=
+\frac{
+\sum_{i=1}^{m}
+\ind{y^{(i)}=1}x^{(i)}
+}{
+\sum_{i=1}^{m}
+\ind{y^{(i)}=1}
+},
+\\[10pt]
+\hat{\Sigma}
+&=
+\frac{1}{m}
+\sum_{i=1}^{m}
+(x^{(i)}-\hat{\mu}_{y^{(i)}})
+(x^{(i)}-\hat{\mu}_{y^{(i)}})^T.
+\end{aligned}
+}
+\]
+
+Thus, the maximum likelihood estimators derived
+in the one-dimensional case extend to arbitrary
+finite dimensions, provided that the empirical
+residual covariance matrix is positive definite.
+
+\hfill$\square$
+
 
 % ------------------------------------------------------------
 % 1(e)
