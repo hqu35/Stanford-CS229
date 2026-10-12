@@ -289,10 +289,14 @@ LaTeX Font Warning: Font shape `TU/ptm/m/it' undefined
 
 [1
 
-] [2] [3] [4] [5] [6] [7] [8] [9] [10] [11] [12] [13] [14] [15] [16] [17]
-[18] [19] (main.aux)
+] [2] [3] [4] [5] [6] [7] [8] [9] [10] [11]
+Underfull \hbox (badness 10000) in paragraph at lines 1805--1807
+
+ []
+
+[12] [13] [14] [15] [16] [17] [18] [19] [20] (main.aux)
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
  )
-Output written on main.xdv (19 pages, 252356 bytes).
+Output written on main.xdv (20 pages, 275328 bytes).

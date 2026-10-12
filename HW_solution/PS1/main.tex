@@ -1780,6 +1780,13 @@ regression?
 
 Why might this be the case?
 
+\medskip
+\noindent\colorbox{yellow}{\textbf{Solution.}}
+
+For dataset one, Linear regression has obviouly done a better job in determining the decision boundary, while 
+the decision boundaries for both models in dataset two are roughly the same. Recall Mahalanobis distance, defined by 
+$d_{E}(x,\mu) = \sqrt{(x-\mu)^T (x - \mu)}$: In multivariate distribution(in particular, when d = 2, it's an ellipse), the level curve of the probability density function is just a dim(d) ellipsoid.
+Notice that here, the geometry of data2 is roughly a slant ellipse, making it valid and appropriate to assume Gaussian distribution of $X | Y = y_i $.
 % ------------------------------------------------------------
 % 1(h)
 % ------------------------------------------------------------
@@ -1791,6 +1798,25 @@ you find a transformation of the $x^{(i)}$'s such that GDA performs
 significantly better?
 
 What is this transformation?
+
+\medskip
+\noindent\colorbox{yellow}{\textbf{Solution.}}
+
+Box-Cox transformation: define 
+\\
+\[
+\boxed{
+T_\lambda(x)=
+\begin{cases}
+\displaystyle\frac{x^\lambda-1}{\lambda},
+&\lambda\neq0,\\[10pt]
+\log x,
+&\lambda=0.
+\end{cases}
+}
+\]
+
+Note: we tempararily skip this part, and we'll come back later if we have more time
 
 \end{enumerate}
 
@@ -1898,7 +1924,131 @@ for some
 \alpha\in\mathbb{R}.
 \]
 
-% Solution to 2(a) will go here.
+% Solution to 2(a) will go here
+
+\medskip
+\noindent\colorbox{yellow}{\textbf{Solution.}}
+
+\vspace{3mm}
+
+Let's first briefly review the concept of Conditional Chain Rule.
+
+Let $(\Omega,\mathcal F,\mathbb P)$ be a probability space,
+and let $A,B,C\in\mathcal F$ be events such that
+$\mathbb P(B\cap C)>0$. Then
+\[
+\boxed{
+\mathbb P(A\cap B\mid C)
+=
+\mathbb P(A\mid B\cap C)\,
+\mathbb P(B\mid C).
+}
+\]
+The notation $\mathbb P(A\mid B,C)$ is shorthand for
+$\mathbb P(A\mid B\cap C)$; the comma denotes simultaneous
+conditioning on both events.
+
+\paragraph{Theorem (Conditional Law of Total Probability).}
+Let $\{B_i\}_{i=1}^{n}$ be a finite measurable partition
+of $\Omega$(total space), and let $C\in\mathcal F$ satisfy
+$\mathbb P(C)>0$. Then, for any event $A\in\mathcal F$,
+\[
+\boxed{
+\mathbb P(A\mid C)
+=
+\sum_{i=1}^{n}
+\mathbb P(A\mid B_i\cap C)\,
+\mathbb P(B_i\mid C).
+}
+\]
+Terms with $\mathbb P(B_i\cap C)=0$ are understood to
+contribute zero to the sum.
+
+\paragraph{Proof.}
+Since $\{B_i\}_{i=1}^{n}$ partitions $\Omega$,
+the events $\{A\cap B_i\cap C\}_{i=1}^{n}$
+are pairwise disjoint, and
+\[
+A\cap C
+=
+\bigcup_{i=1}^{n}(A\cap B_i\cap C).
+\]
+Consequently,
+\[
+\begin{aligned}
+\mathbb P(A\mid C)
+&=\frac{\mathbb P(A\cap C)}{\mathbb P(C)}\\
+&=\sum_{i=1}^{n}
+\frac{\mathbb P(A\cap B_i\cap C)}{\mathbb P(C)}\\
+&=\sum_{i=1}^{n}
+\underbrace{
+\frac{\mathbb P(A\cap B_i\cap C)}
+     {\mathbb P(B_i\cap C)}
+}_{\mathbb P(A\mid B_i\cap C)}
+\underbrace{
+\frac{\mathbb P(B_i\cap C)}
+     {\mathbb P(C)}
+}_{\mathbb P(B_i\mid C)}\\
+&=\sum_{i=1}^{n}
+\mathbb P(A\mid B_i\cap C)\,
+\mathbb P(B_i\mid C).
+\end{aligned}
+\]
+\hfill $\square$
+
+\vspace{3mm}
+
+Now back to the original problem. We are motivated to inspect the relationship between 
+$p(t^{(i)} | x^{(i)})$ and $p(y^{(i)} = 1 | x^{(i)})$.
+
+We first formalize these variables. Let $X$ be a feature vector, $T\in\{0,1\}$ a latent
+binary label, and $Y\in\{0,1\}$ an observed label. Conditioning on $X=x$ and partitioning according to
+the possible values of $T$, we obtain
+\[
+\boxed{
+\begin{aligned}
+\mathbb P(Y=1\mid X=x)
+={}&\mathbb P(Y=1\mid T=1,X=x)
+    \mathbb P(T=1\mid X=x)\\
+&+\mathbb P(Y=1\mid T=0,X=x)
+    \mathbb P(T=0\mid X=x).
+\end{aligned}
+}
+\]
+
+For continuous $X$, this identity is interpreted
+using regular conditional probabilities rather than
+conditioning directly on the zero-probability event
+$\{X=x\}$. It holds for almost every $x$ with respect
+to the distribution of $X$.
+
+We know that negative examples are never labeled:
+\[
+\mathbb P(Y=1\mid T=0,X=x)=0.
+\]
+Furthermore, we know that labeling probability
+among true positive examples is independent of $X$:
+\[
+\mathbb P(Y=1\mid T=1,X=x)
+=
+\mathbb P(Y=1\mid T=1)
+=:\alpha.
+\]
+Then the conditional law of total probability gives
+\[
+\mathbb P(Y=1\mid X=x)
+=
+\alpha\,\mathbb P(T=1\mid X=x).
+\]
+Therefore, provided $\alpha>0$,
+\[
+\boxed{
+\mathbb P(T=1\mid X=x)
+=
+\frac{\mathbb P(Y=1\mid X=x)}{\alpha}.
+}
+\]
+
 
 % ------------------------------------------------------------
 % 2(b)
@@ -1949,6 +2099,9 @@ x^{(i)}\in V_+.
 \]
 
 % Solution to 2(b) will go here.
+
+\medskip
+\noindent\colorbox{yellow}{\textbf{Solution.}}
 
 % ------------------------------------------------------------
 % 2(c)

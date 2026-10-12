@@ -47,7 +47,7 @@ class GDA(LinearModel):
         """
         # *** START CODE HERE ***
         m,n = x.shape
-        phi = np.mean()
+        phi = np.mean(y)
 
         # Indicator function(boolean mask)
         # The first lines create a boolean masking of y (i.e. which lines of y are true and which are false)

@@ -45,9 +45,10 @@ class LogisticRegression(LinearModel):
         # Newton's algorithm: x_{k+1} = x_k - (H(x_k))^{-1} \nabla J(x_k)
         
         m,n = x.shape
-
         #initialize theta to 0, and epsilon
-        self.data = np.zeros(n)
+        self.theta = np.zeros(n)
+        epsilon = 1e-5
+
         while True:
             # predictions
             z = x @ self.theta
@@ -66,7 +67,7 @@ class LogisticRegression(LinearModel):
 
             # note, sometimes broadcasting is hard to achieve, we can call the diag method
             W = np.diag(weights)
-            H2 = (x.T @ W * x) / m
+            H2 = (x.T @ W @ x) / m
 
             assert(np.allclose(H, H2))
 
@@ -76,7 +77,8 @@ class LogisticRegression(LinearModel):
             theta_new = self.theta - delta
 
             # Lastly, check error upper bound
-            # note: this is just euclidean norm d(x,y) ^ ord
+            # note: this is L1 norm d(x,y) ^ ord
+            
             if np.linalg.norm(theta_new - self.theta, ord = 1) < epsilon:
                 self.theta = theta_new
                 break
