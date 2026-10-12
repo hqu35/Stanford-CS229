@@ -1,0 +1,7 @@
+# Tested on Python 3.13 with NumPy 2.3.5, PyTorch 2.10.0+cpu,
+# Matplotlib 3.10.8 and pytest 9.0.2.
+# Use the official PyTorch installation instructions for CUDA systems.
+numpy>=1.26,<3.0
+torch>=2.2,<3.0
+matplotlib>=3.7,<4.0
+pytest>=8.0,<10.0

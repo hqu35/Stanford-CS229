@@ -1,0 +1,33 @@
+{
+  "dataset_name": "CS229-PS-M1-8gaussians",
+  "generator": "scripts/generate_data.py",
+  "seed": 229,
+  "split_rng": "np.random.SeedSequence(seed).spawn(2)",
+  "train_size": 50000,
+  "val_size": 10000,
+  "num_components": 8,
+  "component_probability": 0.125,
+  "center_radius": 2.0,
+  "component_covariance": [
+    [
+      0.01,
+      0.0
+    ],
+    [
+      0.0,
+      0.01
+    ]
+  ],
+  "feature_dtype": "float32",
+  "labels": "component IDs provided for diagnostics; prohibit supervised use",
+  "files": {
+    "train.npz": {
+      "sha256": "f8a3c53d51bd611589429532175db4781524973a43e59afddaca0ad26e1c5d4f",
+      "bytes": 401320
+    },
+    "val.npz": {
+      "sha256": "569f3598df6e602c07ee258071b42007f6741285f5f25e55b27b783547d25eb6",
+      "bytes": 80715
+    }
+  }
+}

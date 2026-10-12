@@ -1,0 +1,340 @@
+\documentclass[11pt]{article}
+
+% =============================================================
+% CS229 Modern Extensions, Problem Set M1 (independent edition)
+% This document is not an official Stanford assignment.
+% =============================================================
+\usepackage[letterpaper,margin=0.90in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,amsthm,mathtools,bm}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{microtype}
+
+\hypersetup{
+  colorlinks=true,
+  urlcolor=blue!55!black,
+  linkcolor=black,
+  pdftitle={CS229 Modern Extensions: Problem Set M1},
+  pdfauthor={Independent Study Edition}
+}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\N}{\mathcal{N}}
+\newcommand{\KL}{D_{\mathrm{KL}}}
+\newcommand{\Cov}{\operatorname{Cov}}
+\newcommand{\Law}{\operatorname{Law}}
+\newcommand{\Normal}{\mathcal{N}}
+\newcommand{\dd}{\,\mathrm{d}}
+\newcommand{\given}{\,\middle|\,}
+\newcommand{\hint}[1]{\par\vspace{2pt}\noindent\textit{Hint.} #1\par}
+\newcommand{\pts}[1]{\hfill\textnormal{[\,#1 points\,]}}
+
+\setlist[enumerate,1]{label=\textbf{(\alph*)},leftmargin=2.0em,itemsep=0.70em,topsep=0.35em,parsep=0.25em}
+\setlength{\parskip}{0.35em}
+\setlength{\parindent}{0pt}
+\allowdisplaybreaks[1]
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small CS229 Modern Extensions}
+\fancyhead[R]{\small Problem Set M1}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\setlength{\headheight}{14pt}
+
+\begin{document}
+\begin{center}
+  {\Large\bfseries CS229: Modern Machine Learning Extensions}\\[0.35em]
+  {\LARGE\bfseries Problem Set M1}\\[0.2em]
+  {\large Denoising Diffusion Probabilistic Models}\\[0.55em]
+  {\small Independent Study Edition \textbullet{} Autumn 2026 \textbullet{} 100 points}
+\end{center}
+\vspace{0.2em}
+\hrule
+\vspace{0.75em}
+
+\textbf{Scope.} This assignment studies Gaussian forward diffusion, exact reverse conditionals,
+variational training objectives, noise-prediction parameterizations, and the implementation of a
+small denoising diffusion probabilistic model (DDPM). It is aligned primarily with the diffusion
+material in the \href{https://cs229.stanford.edu/main_notes.pdf}{2026 CS229 lecture notes}
+(Chapter 14), with the \href{https://cs229.stanford.edu/index.html-spr26}{Spring 2026 course}
+and \href{https://github.com/az9713/cs229-machine-learning-notes}{independent supplementary notes}
+as additional context. This problem set was independently prepared and is \emph{not} an official
+Stanford assignment.
+
+\textbf{Instructions.} There are five problems, worth 100 points in total. Give mathematically
+justified answers to all theoretical questions. Standard facts about multivariate Gaussian
+distributions, Jensen's inequality, and KL divergence may be used without proof unless otherwise
+stated. For programming problems, implement the indicated mathematical procedures rather than
+using an existing diffusion-model training or sampling pipeline.
+
+\textbf{Programming materials.} The dataset, numerical hyperparameters, starter code, and detailed
+experimental specifications for Problems 4 and 5 will be supplied separately. The present version
+contains the complete mathematical questions and the programming-task statements only.
+
+\textbf{Notation.} For any \(d\ge 1\), \(\N(x;\mu,\Sigma)\) denotes the Gaussian \emph{density}
+evaluated at \(x\), while \(\N(\mu,\Sigma)\) denotes the associated probability distribution.
+The notation \(q\) is reserved for the fixed forward process; \(p_\theta\) denotes a learned
+generative process. Empty products are equal to 1. All random vectors are column vectors.
+
+\newpage
+\section*{Problem 1. Gaussian Forward Diffusion \pts{15}}
+
+Let \(X_0\sim q_{\mathrm{data}}\) be an arbitrary random vector in \(\R^d\). Define the
+forward Markov chain \(X_0,X_1,\ldots,X_T\) by
+\begin{equation}\label{eq:forward}
+  q(x_t\mid x_{t-1})
+  =\N\!\left(x_t;\sqrt{1-\beta_t}\,x_{t-1},\beta_t I_d\right),
+  \qquad t=1,\ldots,T,
+\end{equation}
+where \(0<\beta_t<1\). Write
+\[
+  \alpha_t=1-\beta_t,\qquad
+  \bar\alpha_t=\prod_{s=1}^t\alpha_s,\qquad
+  \bar\alpha_0=1.
+\]
+
+\begin{enumerate}
+  \item \pts{7} Prove, for every \(t\in\{1,\ldots,T\}\), that
+  \begin{equation}\label{eq:forward-marginal}
+    q(x_t\mid x_0)
+    =\N\!\left(x_t;\sqrt{\bar\alpha_t}\,x_0,
+                      (1-\bar\alpha_t)I_d\right).
+  \end{equation}
+  Deduce a method for sampling \(X_t\) conditional on \(X_0=x_0\) that does not require
+  simulating the intermediate states \(X_1,\ldots,X_{t-1}\).
+
+  \hint{Consider writing \(X_t\) as an affine function of \(X_0\) and independent standard
+  Gaussian vectors. A telescoping identity simplifies the resulting covariance.}
+
+  \item \pts{4} Assume \(X_0\) has mean \(m_0\) and covariance \(\Sigma_0\).
+  Find \(\E[X_t]\) and \(\Cov(X_t)\). Does the Gaussian form of
+  \(q(x_t\mid x_0)\) imply that the \emph{unconditional} distribution of \(X_t\) is
+  Gaussian? Prove your claim or give a counterexample.
+
+  \item \pts{4} Now extend the schedule to all positive integers. Give a necessary and
+  sufficient condition on \(\{\beta_t\}_{t\ge1}\) for \(\bar\alpha_T\to0\).
+  Prove that, under this condition, for each fixed \(x_0\in\R^d\),
+  \[
+    \Law(X_T\mid X_0=x_0)\ \xrightarrow[T\to\infty]{\mathrm{d}}\ \N(0,I_d).
+  \]
+  Is the assumption \(\beta_t>0\) for all \(t\) sufficient? Justify your answer.
+
+  \hint{Take logarithms of the product defining \(\bar\alpha_T\).}
+\end{enumerate}
+
+\newpage
+\section*{Problem 2. Reverse Conditionals and Variational Inference \pts{25}}
+
+Consider a reverse-time generative model
+\begin{equation}\label{eq:reverse-joint}
+  p_\theta(x_{0:T})
+  =p(x_T)\prod_{t=1}^{T}p_\theta(x_{t-1}\mid x_t),
+  \qquad p(x_T)=\N(x_T;0,I_d),
+\end{equation}
+where \(x_{0:T}=(x_0,\ldots,x_T)\) and
+\[
+  p_\theta(x_{t-1}\mid x_t)
+  =\N\!\left(x_{t-1};\mu_\theta(x_t,t),\sigma_t^2 I_d\right),
+  \qquad \sigma_t^2>0.
+\]
+The objective is to maximize the marginal log-likelihood \(\log p_\theta(x_0)\)
+for clean observations \(x_0\sim q_{\mathrm{data}}\).
+
+\begin{enumerate}
+  \item \pts{9} For \(2\le t\le T\), derive the conditional distribution
+  \(q(x_{t-1}\mid x_t,x_0)\). Show that it is Gaussian, and obtain explicit formulas for
+  \(\widetilde\mu_t(x_t,x_0)\) and \(\widetilde\beta_t\) such that
+  \begin{equation}\label{eq:posterior}
+    q(x_{t-1}\mid x_t,x_0)
+    =\N\!\left(x_{t-1};\widetilde\mu_t(x_t,x_0),
+                  \widetilde\beta_t I_d\right).
+  \end{equation}
+  Explain why this conditional distribution can be derived analytically even when the
+  reverse marginal \(q(x_{t-1}\mid x_t)\) is not available in closed form.
+
+  \hint{Use the Markov property and the proportionality
+  \(q(x_{t-1}\mid x_t,x_0)\propto q(x_t\mid x_{t-1})q(x_{t-1}\mid x_0)\),
+  then complete the square.}
+
+  \item \pts{10} Starting from \(\log p_\theta(x_0)\), construct a variational lower bound
+  \(\mathcal L_{\mathrm{ELBO}}(x_0;\theta)\) using
+  \(q(x_{1:T}\mid x_0)\) as the variational distribution. Prove the decomposition
+  \begin{align}\label{eq:elbo-decomposition}
+    -\mathcal L_{\mathrm{ELBO}}(x_0;\theta)
+    ={}&\KL\!\left(q(x_T\mid x_0)\,\|\,p(x_T)\right)\\
+    &+\sum_{t=2}^{T}\E_{q(x_t\mid x_0)}\!\left[
+      \KL\!\left(
+        q(x_{t-1}\mid x_t,x_0)\,\|\,
+        p_\theta(x_{t-1}\mid x_t)
+      \right)
+    \right]\notag\\
+    &-\E_{q(x_1\mid x_0)}\!\left[
+       \log p_\theta(x_0\mid x_1)
+    \right].\notag
+  \end{align}
+  State which conditional-independence assumptions justify the factorization used in your
+  derivation. Explain the probabilistic role of each term.
+
+  \hint{Factor \(q(x_{1:T}\mid x_0)\) in reverse chronological order, beginning with
+  \(q(x_T\mid x_0)\).}
+
+  \item \pts{4} Evaluate the terminal term
+  \[
+    \KL\!\left(q(x_T\mid x_0)\,\|\,\N(0,I_d)\right)
+  \]
+  in closed form for fixed \(x_0\). Determine its limit as \(\bar\alpha_T\to0\).
+  Explain why, with a fixed noise schedule and prior, it can be omitted from
+  optimization over \(\theta\) without assuming that it is zero.
+
+  \item \pts{2} Why does the posterior formula in part (a) become degenerate if one
+  formally substitutes \(t=1\)? If
+  \(p_\theta(x_0\mid x_1)=\N(x_0;\mu_\theta(x_1,1),\sigma_1^2 I_d)\),
+  with \(\sigma_1^2>0\), express the reconstruction contribution as an expected
+  negative log-likelihood and explain why it is treated separately.
+\end{enumerate}
+
+\newpage
+\section*{Problem 3. Noise Prediction and the DDPM Objective \pts{20}}
+
+By Problem 1, the forward process admits the representation
+\begin{equation}\label{eq:reparam}
+  X_t=\sqrt{\bar\alpha_t}\,X_0
+      +\sqrt{1-\bar\alpha_t}\,\varepsilon,
+  \qquad \varepsilon\sim\N(0,I_d),\quad \varepsilon\perp X_0.
+\end{equation}
+Let \(\varepsilon_\theta:\R^d\times\{1,\ldots,T\}\to\R^d\)
+be a timestep-conditioned neural network.
+
+\begin{enumerate}
+  \item \pts{6} Rewrite the posterior mean \(\widetilde\mu_t(x_t,x_0)\), for \(t\ge2\),
+  in terms of \(x_t\), the Gaussian noise \(\varepsilon\) in \eqref{eq:reparam},
+  and the schedule parameters. Hence derive a parameterization of
+  \(\mu_\theta(x_t,t)\) in terms of \(\varepsilon_\theta(x_t,t)\).
+
+  \hint{Solve \eqref{eq:reparam} for \(X_0\), then substitute into the expression
+  from Problem 2(a).}
+
+  \item \pts{7} For \(t\ge2\), assume that the model variance is fixed at
+  \(\sigma_t^2=\widetilde\beta_t\). Show that the corresponding KL term in
+  \eqref{eq:elbo-decomposition} has the form
+  \begin{equation}\label{eq:weighted-loss}
+     \mathcal L_{t-1}(\theta)
+     =w_t\,\E_{X_0,\varepsilon}\!\left[
+       \left\|\varepsilon-
+       \varepsilon_\theta(X_t,t)\right\|_2^2
+     \right],
+  \end{equation}
+  and determine \(w_t\) explicitly. Here \(X_t\) is generated using
+  \eqref{eq:reparam} for the stated timestep.
+
+  The simplified noise-prediction objective is
+  \begin{equation}\label{eq:simple-loss}
+    \mathcal L_{\mathrm{simple}}(\theta)
+    =\E_{\substack{X_0\sim q_{\mathrm{data}},\\
+             t\sim\operatorname{Unif}\{1,\ldots,T\},\\
+             \varepsilon\sim\N(0,I_d)}}\!\left[
+      \left\|\varepsilon-
+      \varepsilon_\theta(X_t,t)\right\|_2^2
+    \right].
+  \end{equation}
+  Explain why removing the timestep-dependent weights generally changes the optimization
+  problem when the same network parameters are shared across timesteps. Give a simple
+  mathematical example illustrating this difference. In your discussion, distinguish the
+  \(t\ge2\) KL terms from the \(t=1\) reconstruction term.
+
+  \item \pts{5} Fix a timestep \(t\), and suppose \(f\) ranges over all measurable
+  functions with finite expected squared error. Find the minimizer (up to almost-sure
+  equality) of
+  \[
+      \min_f\ \E\!\left[\|\varepsilon-f(X_t)\|_2^2\right].
+  \]
+  Prove your answer. Explain why minimizing this loss does not, in general, recover the
+  particular noise realization used to produce a given \(X_t\).
+
+  \hint{Decompose \(\varepsilon-f(X_t)\) around
+  \(\E[\varepsilon\mid X_t]\) and use orthogonality of conditional-expectation residuals.}
+
+  \item \pts{2} Describe how the learned noise predictor can be used to sample
+  approximately from the data distribution, beginning with
+  \(X_T\sim\N(0,I_d)\). State the reverse transition used for \(t\ge2\).
+  For the final step \(t=1\), explain the distinction between sampling a
+  positive-variance Gaussian decoder and using a deterministic reverse-mean update
+  (a common implementation convention).
+\end{enumerate}
+
+\newpage
+\section*{Problem 4. Numerical Verification of the Diffusion Process \pts{15}}
+
+In this problem you will implement the analytic constructions from Problems 1 and 2,
+and validate them numerically. Use NumPy for the required computations.
+\emph{Detailed input data, numerical schedules, and starter-code interfaces will be
+released separately.}
+
+\begin{enumerate}
+  \item \pts{3} Implement a function that, given \(\beta_1,\ldots,\beta_T\),
+  constructs \(\alpha_t\) and \(\bar\alpha_t\). Document the indexing convention
+  and validate that the supplied values satisfy \(0<\beta_t<1\).
+
+  \item \pts{7} Implement (i) direct sampling from \(q(x_t\mid x_0)\) without
+  simulating the full chain and (ii) the analytical mean and covariance of
+  \(q(x_{t-1}\mid x_t,x_0)\) for \(t\ge2\). The functions should support
+  batches with different timesteps for different observations. Explain how you
+  handle broadcasting and tensor shapes.
+
+  \item \pts{5} Design and perform Monte Carlo tests comparing empirical and
+  theoretical conditional means and covariance matrices at several timesteps.
+  Independently compare direct sampling with sampling obtained by composing
+  one-step forward transitions. Provide an appropriate numerical error measure,
+  discuss sampling variability, and explain what the tests do and do not establish.
+\end{enumerate}
+
+\newpage
+\section*{Problem 5. Implementing a DDPM from Scratch \pts{25}}
+
+You will now implement and train a denoising diffusion probabilistic model on a
+low-dimensional, multimodal synthetic distribution. The dataset specification,
+baseline hyperparameters, and evaluation protocol will be supplied separately.
+Use PyTorch for this problem. Do not use a ready-made DDPM trainer or sampler.
+
+\begin{enumerate}
+  \item \pts{5} Design a timestep-conditioned neural network
+  \(\varepsilon_\theta(x_t,t)\) that predicts the noise used in the forward
+  corruption process. Describe the choice of timestep representation and explain
+  why time conditioning is required.
+
+  \item \pts{5} Implement a stochastic estimator of the simplified objective
+  \eqref{eq:simple-loss}. Your implementation should sample timesteps and Gaussian
+  perturbations, construct noisy inputs directly, and use automatic differentiation
+  to update \(\theta\). Explain why the sampled minibatch loss is an estimator
+  of the stated population objective.
+
+  \item \pts{7} Implement a reverse-diffusion sampler, starting from
+  \(X_T\sim\N(0,I_d)\). Generate observations from the trained model and
+  compare their distribution with held-out samples from the target distribution.
+  Visualize intermediate stages of the reverse process and interpret the result
+  in terms of the learned reverse transition kernels.
+
+  \item \pts{8} Carry out a controlled comparison between two distinct noise
+  schedules with the same terminal value \(\bar\alpha_T\). Derive any schedule
+  parameter needed to enforce this equality. Evaluate denoising accuracy and
+  sample quality using quantitative metrics appropriate to the provided dataset.
+  Discuss whether lower noise-prediction error necessarily implies better
+  generative performance, and identify limitations of the experimental comparison.
+\end{enumerate}
+
+\vspace{0.6em}
+\hrule
+\vspace{0.6em}
+{\small
+\textbf{Suggested references.}
+\href{https://cs229.stanford.edu/main_notes.pdf}{Ma and Ng, \emph{CS229 Lecture Notes} (2026), Chapter 14};
+\href{https://arxiv.org/abs/2006.11239}{Ho, Jain, and Abbeel, \emph{Denoising Diffusion Probabilistic Models} (2020)};
+\href{https://github.com/az9713/cs229-machine-learning-notes}{independent Spring 2026 notes}.
+}
+
+\end{document}

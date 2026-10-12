@@ -1,0 +1,10 @@
+{
+  "name": "CS229 Modern Extensions — PS-M1 Coding Starter",
+  "version": "1.0.0",
+  "date": "2026-10-11",
+  "problem_set": "PS-M1 Diffusion Models",
+  "scope": "Problems 4 and 5 (40 points)",
+  "release_type": "student_starter",
+  "includes_solutions": false,
+  "license_note": "Independently authored educational material; not an official Stanford release"
+}

@@ -552,7 +552,7 @@ Therefore, defining
 \theta=\Sigma^{-1}(\mu_1-\mu_0)
 }
 \]
-and
+and by using the differnece-of-squares identity:
 \[
 \boxed{
 \theta_0
@@ -560,7 +560,7 @@ and
 \frac12\mu_0^T\Sigma^{-1}\mu_0
 -\frac12\mu_1^T\Sigma^{-1}\mu_1
 +\log\frac{\phi}{1-\phi},
-}
+    = \log\frac{\phi}{1-\phi} - \frac{1}{2}(\mu_0 + \mu_1)^{T} \theta}
 \]
 we conclude that
 \[
@@ -1746,7 +1746,8 @@ residual covariance matrix is positive definite.
 In \texttt{src/p01e\_gda.py}, fill in the code to calculate
 $\phi,\mu_0,\mu_1,$ and $\Sigma$, use these parameters to derive
 $\theta$, and use the resulting GDA model to make predictions on the
-validation set.
+validation set. (Hint: you might want to rewrite $\theta_0$ in the appropriate form
+by the difference-of-squares identity for symmetric matrix A: $u^TAu - vA^Tv = (u+v)^TA(u-v)$)
 
 % ------------------------------------------------------------
 % 1(f)

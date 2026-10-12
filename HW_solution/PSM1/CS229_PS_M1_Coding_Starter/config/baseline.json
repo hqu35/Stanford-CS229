@@ -1,0 +1,37 @@
+{
+  "seed": 229,
+  "data": {
+    "components": 8,
+    "radius": 2.0,
+    "component_std": 0.1,
+    "train_size": 50000,
+    "validation_size": 10000,
+    "dtype": "float32"
+  },
+  "diffusion": {
+    "steps": 200,
+    "beta_start": 0.0001,
+    "beta_end": 0.05,
+    "baseline_schedule": "linear",
+    "comparison_schedule": "constant-matched"
+  },
+  "model": {
+    "hidden_dim": 128,
+    "time_dim": 32,
+    "hidden_layers": 3,
+    "activation": "SiLU"
+  },
+  "training": {
+    "optimizer": "Adam",
+    "learning_rate": 0.001,
+    "batch_size": 256,
+    "updates": 12000
+  },
+  "evaluation": {
+    "timesteps": [1, 50, 100, 200],
+    "samples_to_generate": 4000,
+    "mode_radius": 0.35,
+    "coverage_threshold": 0.01,
+    "snapshots": [200, 150, 100, 50, 0]
+  }
+}
