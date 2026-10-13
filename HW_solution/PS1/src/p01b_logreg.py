@@ -97,6 +97,6 @@ class LogisticRegression(LinearModel):
         """
         # *** START CODE HERE ***
         z = x @ self.theta
-        predictions = 1 / 1 + np.exp(-np.clip(z,-500, 500))
+        predictions = 1 / (1 + np.exp(-np.clip(z,-500, 500)))
         return predictions
         # *** END CODE HERE ***
