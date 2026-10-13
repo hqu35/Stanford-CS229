@@ -2102,6 +2102,48 @@ x^{(i)}\in V_+.
 
 \medskip
 \noindent\colorbox{yellow}{\textbf{Solution.}}
+\vspace{3mm}
+
+From part (a), we have established that
+\[
+P(Y=1\mid X=x)
+=
+\alpha P(T=1\mid X=x),
+\]
+where
+\[
+\alpha=P(Y=1\mid T=1).
+\]
+
+By assumption, the classifier $h$ satisfies
+\[
+h(x)\approx P(Y=1\mid X=x).
+\]
+
+Furthermore, for every labeled positive example $x\in V_+$,
+we are given that
+\[
+P(T=1\mid X=x)\approx 1.
+\]
+
+Consequently,
+\[
+\begin{aligned}
+h(x)
+&\approx P(Y=1\mid X=x)\\
+&=\alpha P(T=1\mid X=x)\\
+&\approx\alpha.
+\end{aligned}
+\]
+
+Therefore,
+\[
+\boxed{
+h(x^{(i)})\approx\alpha,
+\qquad \forall x^{(i)}\in V_+.
+}
+\]
+\hfill $\square$
 
 % ------------------------------------------------------------
 % 2(c)
@@ -2229,6 +2271,54 @@ a(\eta).
 
 % Solution to 3(a) will go here.
 
+\medskip
+\noindent\colorbox{yellow}{\textbf{Solution.}}
+\vspace{3mm}
+
+Rewriting the probability mass function, we obtain
+\[
+\begin{aligned}
+p(y;\lambda)
+&=\exp\left(
+\ln\frac{e^{-\lambda}\lambda^y}{y!}
+\right)\\
+&=\exp\left(
+-\lambda+y\ln\lambda-\ln(y!)
+\right)\\
+&=\frac{1}{y!}\exp\left(y\ln\lambda-\lambda\right).
+\end{aligned}
+\]
+
+Define the natural parameter
+\[
+\eta=\ln\lambda
+\quad\Longleftrightarrow\quad
+\lambda=e^\eta.
+\]
+
+Substituting this into the expression above gives
+\[
+p(y;\eta)
+=
+\frac{1}{y!}\exp\left(\eta y-e^\eta\right).
+\]
+
+Comparing with the exponential family representation, we identify
+\[
+\boxed{
+\begin{aligned}
+b(y)&=\frac{1}{y!},\\[4pt]
+\eta&=\ln\lambda,\\[4pt]
+T(y)&=y,\\[4pt]
+a(\eta)&=e^\eta.
+\end{aligned}
+}
+\]
+
+Therefore, the Poisson distribution belongs to the exponential family.
+\hfill $\square$
+
+
 % ------------------------------------------------------------
 % 3(b)
 % ------------------------------------------------------------
@@ -2244,6 +2334,42 @@ You may use the fact that a Poisson random variable with parameter
 $\lambda$ has mean $\lambda$.
 
 % Solution to 3(b) will go here.
+
+
+\medskip
+\noindent\colorbox{yellow}{\textbf{Solution.}}
+\vspace{3mm}
+
+From part (a), the Poisson distribution belongs to the exponential family
+with natural parameter $\eta=\log\lambda$ and log-partition function
+\[
+a(\eta)=e^\eta.
+\]
+
+Recall that the canonical response function of a GLM is given by
+\[
+h_\theta(x)=\mathbb{E}[Y\mid X=x;\theta].
+\]
+
+Since $T(y)=y$, we have
+\[
+\mathbb{E}[Y\mid X=x;\theta]
+=
+\frac{\partial a(\eta)}{\partial\eta}
+=
+e^\eta.
+\]
+
+Under the canonical link assumption $\eta=\theta^Tx$, it follows that
+\[
+\boxed{
+h_\theta(x)=e^{\theta^Tx}.
+}
+\]
+
+Therefore, the canonical response function for Poisson regression
+is the exponential function.
+\hfill $\square$
 
 % ------------------------------------------------------------
 % 3(c)
@@ -2418,6 +2544,94 @@ p(y;\eta)\,dy.
 
 % Solution to 4(a) will go here.
 
+\medskip
+\noindent\colorbox{yellow}{\textbf{Solution.}}
+\vspace{3mm}
+
+
+By the definition of conditional expectation,
+\[
+\mathbb{E}[Y\mid X=x;\theta]
+=
+\int_{\mathcal Y} y\,p(y;\eta)\,dy.
+\]
+
+First, differentiating $p(y;\eta)$ with respect to $\eta$, we obtain
+\[
+\begin{aligned}
+\frac{\partial}{\partial\eta}p(y;\eta)
+&=
+b(y)\exp\left(\eta y-a(\eta)\right)
+\left(y-\frac{\partial a}{\partial\eta}\right)\\
+&=
+p(y;\eta)\left(y-\frac{\partial a}{\partial\eta}\right)\\
+&=
+y\,p(y;\eta)
+-
+\frac{\partial a}{\partial\eta}p(y;\eta).
+\end{aligned}
+\]
+
+Rearranging,
+\[
+\boxed{
+y\,p(y;\eta)
+=
+\frac{\partial}{\partial\eta}p(y;\eta)
++
+\frac{\partial a}{\partial\eta}p(y;\eta).
+}
+\]
+
+Substituting into the expression for the conditional expectation,
+\[
+\begin{aligned}
+\mathbb{E}[Y\mid X=x;\theta]
+&=
+\int_{\mathcal Y} y\,p(y;\eta)\,dy\\[4pt]
+&=
+\int_{\mathcal Y}
+\frac{\partial}{\partial\eta}p(y;\eta)\,dy
++
+\frac{\partial a}{\partial\eta}
+\int_{\mathcal Y}p(y;\eta)\,dy\\[4pt]
+&=
+\frac{\partial}{\partial\eta}
+\int_{\mathcal Y}p(y;\eta)\,dy
++
+\frac{\partial a}{\partial\eta}
+\int_{\mathcal Y}p(y;\eta)\,dy\\[4pt]
+&=
+\frac{\partial}{\partial\eta}(1)
++
+\frac{\partial a}{\partial\eta}\cdot 1\\[4pt]
+&=
+\frac{\partial a}{\partial\eta}.
+\end{aligned}
+\]
+
+Here, differentiation under the integral sign is justified
+by the regularity conditions of the exponential family,
+and we have used the normalization property
+\[
+\int_{\mathcal Y}p(y;\eta)\,dy=1.
+\]
+
+Therefore,
+\[
+\boxed{
+\mathbb{E}[Y\mid X=x;\theta]
+=
+a'(\eta)
+=
+a'(\theta^T x).
+}
+\]
+
+Hence, the conditional mean is given by the first derivative
+of the log-partition function with respect to the natural parameter.
+\hfill $\square$
+
 % ------------------------------------------------------------
 % 4(b)
 % ------------------------------------------------------------
@@ -2435,6 +2649,132 @@ i.e.\ the second derivative of the log-partition function
 $a(\eta)$ with respect to the natural parameter $\eta$.
 
 % Solution to 4(b) will go here.
+
+\medskip
+\noindent\colorbox{yellow}{\textbf{Solution.}}
+\vspace{3mm}
+
+Recall that the exponential family distribution with $T(y)=y$ is
+given by
+\[
+p(y;\eta)=b(y)\exp\left(\eta y-a(\eta)\right),
+\qquad \eta=\theta^T x.
+\]
+
+By the definition of conditional variance,
+\[
+\begin{aligned}
+\operatorname{Var}(Y\mid X=x;\theta)
+&=\mathbb{E}\left[
+\left(Y-\mathbb{E}[Y\mid X=x;\theta]\right)^2
+\mid X=x;\theta
+\right]\\
+&=\mathbb{E}[Y^2\mid X=x;\theta]
+-\left(\mathbb{E}[Y\mid X=x;\theta]\right)^2.
+\end{aligned}
+\]
+
+From part (a), we have established that
+\[
+\mathbb{E}[Y\mid X=x;\theta]=a'(\eta).
+\]
+
+Thus, it suffices to show that
+\[
+a''(\eta)
+=
+\mathbb{E}[Y^2\mid X=x;\theta]
+-\left(a'(\eta)\right)^2.
+\]
+
+Differentiating the result from part (a) with respect to
+the natural parameter $\eta$, we obtain
+\[
+\frac{\partial}{\partial\eta}
+\mathbb{E}[Y\mid X=x;\theta]
+=
+a''(\eta).
+\]
+
+On the other hand, by the definition of conditional expectation,
+\[
+\mathbb{E}[Y\mid X=x;\theta]
+=
+\int_{\mathcal Y}y\,p(y;\eta)\,dy.
+\]
+
+Assuming the regularity conditions that justify differentiation
+under the integral sign,
+\[
+\begin{aligned}
+\frac{\partial}{\partial\eta}
+\mathbb{E}[Y\mid X=x;\theta]
+&=
+\frac{\partial}{\partial\eta}
+\int_{\mathcal Y}y\,p(y;\eta)\,dy\\
+&=
+\int_{\mathcal Y}
+\frac{\partial}{\partial\eta}
+\left(y\,p(y;\eta)\right)\,dy.
+\end{aligned}
+\]
+
+Using the exponential family representation,
+\[
+\begin{aligned}
+\frac{\partial}{\partial\eta}
+\left(y\,p(y;\eta)\right)
+&=
+\frac{\partial}{\partial\eta}
+\left(y\,b(y)e^{\eta y-a(\eta)}\right)\\
+&=
+y\,b(y)e^{\eta y-a(\eta)}
+\left(y-a'(\eta)\right)\\
+&=
+y^2p(y;\eta)-a'(\eta)y\,p(y;\eta).
+\end{aligned}
+\]
+
+Substituting this expression into the integral yields
+\[
+\begin{aligned}
+a''(\eta)
+&=
+\int_{\mathcal Y}
+\left(
+y^2p(y;\eta)-a'(\eta)y\,p(y;\eta)
+\right)\,dy\\[4pt]
+&=
+\int_{\mathcal Y}y^2p(y;\eta)\,dy
+-a'(\eta)\int_{\mathcal Y}y\,p(y;\eta)\,dy\\[4pt]
+&=
+\mathbb{E}[Y^2\mid X=x;\theta]
+-a'(\eta)\mathbb{E}[Y\mid X=x;\theta]\\[4pt]
+&=
+\mathbb{E}[Y^2\mid X=x;\theta]
+-\left(\mathbb{E}[Y\mid X=x;\theta]\right)^2\\[4pt]
+&=
+\operatorname{Var}(Y\mid X=x;\theta).
+\end{aligned}
+\]
+
+Therefore,
+\[
+\boxed{
+\operatorname{Var}(Y\mid X=x;\theta)
+=
+\frac{\partial}{\partial\eta}
+\mathbb{E}[Y\mid X=x;\theta]
+=
+\frac{\partial^2a(\eta)}{\partial\eta^2}
+=
+a''(\theta^Tx).
+}
+\]
+
+Hence, the conditional variance is equal to the second derivative
+of the log-partition function with respect to the natural parameter.
+\hfill $\square$
 
 % ------------------------------------------------------------
 % 4(c)
