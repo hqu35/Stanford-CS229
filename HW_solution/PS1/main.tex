@@ -2351,7 +2351,7 @@ Recall that the canonical response function of a GLM is given by
 h_\theta(x)=\mathbb{E}[Y\mid X=x;\theta].
 \]
 
-Since $T(y)=y$, we have
+Since $T(y)=y$, by using the formula proven in Q4
 \[
 \mathbb{E}[Y\mid X=x;\theta]
 =
@@ -2395,6 +2395,127 @@ learning using a GLM model with Poisson responses $y$ and the canonical
 response function.
 
 % Solution to 3(c) will go here.
+
+\medskip
+\noindent\colorbox{yellow}{\textbf{Solution.}}
+\vspace{3mm}
+
+For a single training example $(x^{(i)},y^{(i)})$, the Poisson GLM
+assumes that
+\[
+Y\mid X=x^{(i)};\theta
+\sim \operatorname{Poisson}(\lambda_i),
+\qquad
+\lambda_i=e^{\theta^Tx^{(i)}}.
+\]
+
+Thus, the conditional probability mass function is
+\[
+p(y^{(i)}\mid x^{(i)};\theta)
+=
+\frac{1}{y^{(i)}!}
+\exp\left(
+y^{(i)}\theta^Tx^{(i)}
+-
+e^{\theta^Tx^{(i)}}
+\right).
+\]
+
+Define the single-example likelihood function by
+\[
+L_i(\theta)
+=
+p(y^{(i)}\mid x^{(i)};\theta).
+\]
+
+Taking the logarithm, we obtain the log-likelihood
+\[
+\begin{aligned}
+\ell_i(\theta)
+&=\log L_i(\theta)\\
+&=
+-\log(y^{(i)}!)
++
+y^{(i)}\theta^Tx^{(i)}
+-
+e^{\theta^Tx^{(i)}}.
+\end{aligned}
+\]
+
+Taking the gradient of the log-likelihood with respect to
+$\theta$, we obtain
+\[
+\begin{aligned}
+\nabla_\theta \ell_i(\theta)
+&=
+\nabla_\theta
+\left(
+y^{(i)}\theta^Tx^{(i)}
+-
+e^{\theta^Tx^{(i)}}
+\right)\\
+&=
+y^{(i)}x^{(i)}
+-
+e^{\theta^Tx^{(i)}}x^{(i)}\\
+&=
+\boxed{
+\left(
+y^{(i)}-e^{\theta^Tx^{(i)}}
+\right)x^{(i)}
+}.
+\end{aligned}
+\]
+
+
+Since we seek to maximize the log-likelihood, we apply
+stochastic gradient ascent with learning rate $\alpha>0$:
+\[
+\theta^{(t+1)}
+=
+\theta^{(t)}
++
+\alpha\nabla_\theta\ell_i(\theta^{(t)}).
+\]
+
+Substituting the gradient yields
+\[
+\boxed{
+\theta^{(t+1)}
+=
+\theta^{(t)}
++
+\alpha
+\left(
+y^{(i)}
+-
+e^{(\theta^{(t)})^Tx^{(i)}}
+\right)x^{(i)}.
+}
+\]
+
+Finally, recalling that the canonical response function
+for Poisson regression is
+\[
+h_\theta(x)=e^{\theta^Tx},
+\]
+we can express the stochastic gradient ascent update as
+\[
+\boxed{
+\theta^{(t+1)}
+=
+\theta^{(t)}
++
+\alpha
+\left(
+y^{(i)}
+-
+h_{\theta^{(t)}}(x^{(i)})
+\right)x^{(i)}.
+}
+\]
+\hfill $\square$
+
 
 % ------------------------------------------------------------
 % 3(d)
@@ -2799,6 +2920,143 @@ parts to simplify your derivations.
 
 % Solution to 4(c) will go here.
 
+\medskip
+\noindent\colorbox{yellow}{\textbf{Solution.}}
+\vspace{3mm}
+
+
+For a single training example $(x,y)$, the likelihood is
+\[
+L(\theta)=p(y\mid x;\theta),
+\]
+and the negative log-likelihood is defined as
+\[
+\ell(\theta)=-\log L(\theta).
+\]
+
+Recall that the exponential family distribution, with
+$T(y)=y$ and natural parameter $\eta=\theta^Tx$, is given by
+\[
+p(y\mid x;\theta)
+=
+b(y)\exp\left(y\theta^Tx-a(\theta^Tx)\right).
+\]
+
+Substituting this expression into the NLL, we obtain
+\[
+\begin{aligned}
+\ell(\theta)
+&=-\log\left[
+b(y)\exp\left(y\theta^Tx-a(\theta^Tx)\right)
+\right]\\
+&=-\log b(y)-y\theta^Tx+a(\theta^Tx).
+\end{aligned}
+\]
+
+Taking the gradient with respect to $\theta$ and applying
+the chain rule,
+\[
+\begin{aligned}
+\nabla_\theta\ell(\theta)
+&=-y\nabla_\theta(\theta^Tx)
++\nabla_\theta a(\theta^Tx)\\
+&=-yx+a'(\theta^Tx)x\\
+&=\left(a'(\theta^Tx)-y\right)x.
+\end{aligned}
+\]
+
+Differentiating once more, we obtain the Hessian:
+\[
+\boxed{
+\nabla_\theta^2\ell(\theta)
+=
+a''(\theta^Tx)xx^T.
+}
+\]
+
+We now prove that this Hessian is positive semidefinite.
+
+By definition, a symmetric matrix $H$ is positive
+semidefinite if
+\[
+v^THv\geq 0,
+\qquad \forall v\in\mathbb{R}^n.
+\]
+
+Let $v\in\mathbb{R}^n$ be arbitrary. Then
+\[
+\begin{aligned}
+v^T\nabla_\theta^2\ell(\theta)v
+&=v^T\left(a''(\theta^Tx)xx^T\right)v\\
+&=a''(\theta^Tx)v^Txx^Tv\\
+&=a''(\theta^Tx)(x^Tv)^T(x^Tv)\\
+&=a''(\theta^Tx)(x^Tv)^2.
+\end{aligned}
+\]
+
+From part (b), we have established that
+\[
+a''(\eta)
+=
+\operatorname{Var}(Y\mid X=x;\theta)\geq 0.
+\]
+
+Moreover, since $x^Tv\in\mathbb{R}$,
+\[
+(x^Tv)^2\geq 0.
+\]
+
+Consequently,
+\[
+\boxed{
+v^T\nabla_\theta^2\ell(\theta)v
+=
+a''(\theta^Tx)(x^Tv)^2
+\geq 0.
+}
+\]
+
+Since $v$ was arbitrary, it follows that
+\[
+\boxed{
+\nabla_\theta^2\ell(\theta)\succeq 0.
+}
+\]
+
+Hence, the single-example negative log-likelihood
+$\ell(\theta)$ is convex on its natural convex parameter domain.
+
+For a dataset of $m$ conditionally independent training
+examples, the total negative log-likelihood is
+\[
+J(\theta)
+=
+\sum_{i=1}^m
+\ell_i(\theta).
+\]
+
+Its Hessian is
+\[
+\nabla_\theta^2J(\theta)
+=
+\sum_{i=1}^m
+a''(\theta^Tx^{(i)})
+x^{(i)}(x^{(i)})^T.
+\]
+
+Since each summand is positive semidefinite,
+their sum is also positive semidefinite:
+\[
+\boxed{
+\nabla_\theta^2J(\theta)\succeq 0.
+}
+\]
+
+Therefore, the negative log-likelihood loss of a
+canonical GLM is convex on its convex parameter domain.
+\hfill $\square$
+
+
 \end{enumerate}
 
 \medskip
@@ -2873,6 +3131,86 @@ Clearly specify the value of each element of the matrix $W$.
 
 % Solution to 5(a)(i) will go here.
 
+\medskip
+\noindent\colorbox{yellow}{\textbf{Solution.}}
+\vspace{3mm}
+
+Suppose we have $m$ training examples, each with $n$ features.
+Define the design matrix $X\in\mathbb{R}^{m\times n}$,
+the label vector $y\in\mathbb{R}^{m}$, and the parameter
+vector $\theta\in\mathbb{R}^{n}$ by
+\[
+X=
+\begin{pmatrix}
+(x^{(1)})^T\\
+(x^{(2)})^T\\
+\vdots\\
+(x^{(m)})^T
+\end{pmatrix},
+\qquad
+y=
+\begin{pmatrix}
+y^{(1)}\\
+y^{(2)}\\
+\vdots\\
+y^{(m)}
+\end{pmatrix}.
+\]
+
+Observe that
+\[
+X\theta-y=
+\begin{pmatrix}
+\theta^Tx^{(1)}-y^{(1)}\\
+\theta^Tx^{(2)}-y^{(2)}\\
+\vdots\\
+\theta^Tx^{(m)}-y^{(m)}
+\end{pmatrix}.
+\]
+
+Now define the diagonal weight matrix
+\[
+\boxed{
+W=\frac12
+\begin{pmatrix}
+w^{(1)} & 0 & \cdots & 0\\
+0 & w^{(2)} & \cdots & 0\\
+\vdots & \vdots & \ddots & \vdots\\
+0 & 0 & \cdots & w^{(m)}
+\end{pmatrix}
+}
+\in\mathbb{R}^{m\times m}.
+\]
+
+Equivalently, its entries are
+\[
+W_{ij}=
+\begin{cases}
+\dfrac12 w^{(i)}, & i=j,\\[2mm]
+0, & i\neq j.
+\end{cases}
+\]
+
+Expanding the quadratic form, we obtain
+\[
+\begin{aligned}
+(X\theta-y)^TW(X\theta-y)
+&=
+\frac12\sum_{i=1}^{m}
+w^{(i)}
+\left(\theta^Tx^{(i)}-y^{(i)}\right)^2\\
+&=J(\theta).
+\end{aligned}
+\]
+
+Therefore,
+\[
+\boxed{
+J(\theta)=(X\theta-y)^TW(X\theta-y).
+}
+\]
+
+
 % ------------------------------------------------------------
 % 5(a)(ii)
 % ------------------------------------------------------------
@@ -2898,6 +3236,76 @@ weighted setting, and give the new value of $\theta$ that minimizes
 $J(\theta)$ in closed form as a function of $X,W,$ and $y$.
 
 % Solution to 5(a)(ii) will go here.
+
+\medskip
+\noindent\colorbox{yellow}{\textbf{Solution.}}
+\vspace{3mm}
+
+From Part (i), the weighted least-squares objective is
+\[
+J(\theta)=(X\theta-y)^TW(X\theta-y),
+\]
+where $W$ is a symmetric diagonal matrix.
+
+Expanding the quadratic form gives
+\[
+\begin{aligned}
+J(\theta)
+&=(\theta^TX^T-y^T)W(X\theta-y)\\
+&=\theta^TX^TWX\theta
+-\theta^TX^TWy
+-y^TWX\theta
++y^TWy.
+\end{aligned}
+\]
+
+Since $W=W^T$, the matrix $X^TWX$ is symmetric.
+Recall the matrix differentiation identities
+\[
+\nabla_\theta(\theta^TA\theta)
+=(A+A^T)\theta,
+\qquad
+\nabla_\theta(\theta^Tb)=b.
+\]
+
+Taking the gradient with respect to $\theta$, we obtain
+\[
+\begin{aligned}
+\nabla_\theta J(\theta)
+&=2X^TWX\theta-X^TWy-X^TW^Ty\\
+&=2X^TWX\theta-2X^TWy\\
+&=2X^TW(X\theta-y).
+\end{aligned}
+\]
+
+Setting the gradient equal to zero yields
+\[
+2X^TW(X\theta-y)=0.
+\]
+
+Consequently,
+\[
+\boxed{
+X^TWX\theta=X^TWy.
+}
+\]
+
+This is the \textbf{weighted normal equation}.
+
+Assuming $X^TWX$ is invertible, multiplying both
+sides by $(X^TWX)^{-1}$ gives
+\[
+\boxed{
+\theta^*=(X^TWX)^{-1}X^TWy.
+}
+\]
+
+Furthermore, since $W$ is positive semidefinite,
+\[
+\nabla_\theta^2J(\theta)=2X^TWX\succeq 0.
+\]
+Thus, $J$ is convex, and the stationary point
+$\theta^*$ is a global minimizer.
 
 % ------------------------------------------------------------
 % 5(a)(iii)

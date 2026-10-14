@@ -15,12 +15,14 @@ def main(lr, train_path, eval_path, pred_path):
     """
     # Load training set
     x_train, y_train = util.load_dataset(train_path, add_intercept=True)
-    # The line below is the original one from Stanford. It does not include the intercept, but this should be added.
-    # x_train, y_train = util.load_dataset(train_path, add_intercept=False)
 
     # *** START CODE HERE ***
     # Fit a Poisson Regression model
+    poiModel = PoissonRegression(step_size = lr)
+    poiModel.fit(x_train, y_train)
     # Run on the validation set, and use np.savetxt to save outputs to pred_path
+    x_eval,_ = util.load_dataset(eval_path, add_intercept = True)
+    np.savetxt(pred_path, poiModel.predict(x_eval))
     # *** END CODE HERE ***
 
 
@@ -41,6 +43,42 @@ class PoissonRegression(LinearModel):
             y: Training example labels. Shape (m,).
         """
         # *** START CODE HERE ***
+        # SGD
+        m, n = x.shape
+
+        # Initialize the parameter vector
+        self.theta = np.zeros(n)
+
+        # Initialize only the intercept
+        self.theta[0] = np.log(np.mean(y))
+        
+        max_iteration = 5000
+        error = 1e-5
+        for i in range(max_iteration):
+            # forward pass: E[Y | X = x] = exp(X @ theta)
+            predictions = np.exp(x @ self.theta)
+            # the gradient of the current iteration: \nabla_theta l(theta)
+            gradient = x.T @(y - predictions) / m
+
+            # Gradient ascent
+            theta_new = self.theta + self.step_size * gradient
+ 
+            if i < 5:
+                print(f"Iteration {i}")
+                print("Theta:", self.theta)
+                print("Gradient norm:", np.linalg.norm(gradient))
+                print("Prediction range:", np.min(predictions), np.max(predictions))
+                print("Updated eta range:", np.min(x @ theta_new),
+                    np.max(x @ theta_new))
+
+            # check convergence
+            if np.linalg.norm (theta_new - self.theta) < error:
+                self.theta = theta_new
+                print(f"Converged after {i + 1} iterations.")
+                break
+            self.theta = theta_new
+        else :
+            print("Maximum number of iterations reached")
         # *** END CODE HERE ***
 
     def predict(self, x):
@@ -53,4 +91,5 @@ class PoissonRegression(LinearModel):
             Floating-point prediction for each input, shape (m,).
         """
         # *** START CODE HERE ***
+        return np.exp(x @ self.theta)
         # *** END CODE HERE ***
