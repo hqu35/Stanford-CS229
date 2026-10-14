@@ -3359,6 +3359,83 @@ $\sigma^{(i)}$'s.
 
 % Solution to 5(a)(iii) will go here.
 
+\medskip
+\noindent\colorbox{yellow}{\textbf{Solution.}}
+\vspace{3mm}
+
+Suppose the $m$ training examples are independent, with
+\[
+Y^{(i)}\mid X=x^{(i)};\theta
+\sim
+\mathcal{N}\left(\theta^Tx^{(i)},(\sigma^{(i)})^2\right),
+\]
+where each $\sigma^{(i)}>0$ is a fixed, known constant.
+
+The likelihood function is
+\[
+\begin{aligned}
+L(\theta)
+&=\prod_{i=1}^{m}p(y^{(i)}\mid x^{(i)};\theta)\\
+&=\prod_{i=1}^{m}
+\frac{1}{\sqrt{2\pi}\sigma^{(i)}}
+\exp\left(
+-\frac{(y^{(i)}-\theta^Tx^{(i)})^2}
+{2(\sigma^{(i)})^2}
+\right).
+\end{aligned}
+\]
+
+Taking the logarithm, we obtain
+\[
+\begin{aligned}
+\ell(\theta)
+:=\log L(\theta)
+&=-m\log\sqrt{2\pi}
+-\sum_{i=1}^{m}\log\sigma^{(i)}\\
+&\quad
+-\frac12\sum_{i=1}^{m}
+\frac{(y^{(i)}-\theta^Tx^{(i)})^2}
+{(\sigma^{(i)})^2}.
+\end{aligned}
+\]
+
+Since the first two terms are independent of $\theta$,
+maximizing the log-likelihood is equivalent to minimizing
+the negative of the remaining term. Hence,
+\[
+\begin{aligned}
+\hat{\theta}_{\mathrm{MLE}}
+&=\arg\max_{\theta}\ell(\theta)\\
+&=\arg\min_{\theta}
+\frac12\sum_{i=1}^{m}
+\frac{1}{(\sigma^{(i)})^2}
+\left(\theta^Tx^{(i)}-y^{(i)}\right)^2.
+\end{aligned}
+\]
+
+Comparing this objective with the weighted least-squares
+objective
+\[
+J(\theta)
+=
+\frac12\sum_{i=1}^{m}
+w^{(i)}
+\left(\theta^Tx^{(i)}-y^{(i)}\right)^2,
+\]
+we identify the weights as
+\[
+\boxed{
+w^{(i)}=\frac{1}{(\sigma^{(i)})^2},
+\qquad i=1,\ldots,m.
+}
+\]
+
+Therefore, maximum likelihood estimation under independent
+Gaussian observations with known, potentially different
+variances is equivalent to solving a weighted linear
+regression problem, where each observation is weighted
+inversely proportional to its noise variance.
+
 \end{enumerate}
 
 % ------------------------------------------------------------
@@ -3366,7 +3443,93 @@ $\sigma^{(i)}$'s.
 % ------------------------------------------------------------
 
 \item \textbf{[10 points] Coding problem.}
+Before we actually do the real coding, let's step back and try to figure out the logistics 
+of LWR.
 
+
+\medskip
+\noindent\colorbox{green}{\textbf{Interpretation.}}
+\vspace{3mm}
+
+\noindent\textbf{Key Insight: Local Parameters and the Global Regression Curve.}
+
+Unlike ordinary linear regression, which learns a single global
+parameter vector $\theta^*$, locally weighted linear regression
+(LWR) computes a different optimal parameter vector for each
+query point $x$.
+
+For a given query $x\in\mathbb{R}$, define
+\[
+w^{(i)}(x)
+=
+\exp\left(
+-\frac{(x^{(i)}-x)^2}{2\tau^2}
+\right),
+\qquad
+W(x)=\operatorname{diag}\bigl(w^{(1)}(x),\ldots,w^{(m)}(x)\bigr).
+\]
+
+Applying the weighted normal equation gives
+\[
+\boxed{
+\theta^*(x)
+=
+\left(X^TW(x)X\right)^{-1}X^TW(x)y.
+}
+\]
+
+Thus, the optimal parameter vector is itself a function of
+the query point $x$. Different queries generally produce
+different weight matrices and hence different local models:
+\[
+x_1\neq x_2
+\quad\Longrightarrow\quad
+\theta^*(x_1)\neq\theta^*(x_2)
+\quad\text{in general}.
+\]
+
+\noindent\textbf{The Global Regression Curve.}
+
+Although LWR has no single global parameter vector, it
+still defines a unique prediction function. Writing
+$\tilde{x}=(1,x)^T$ to include the intercept, we obtain
+\[
+\begin{aligned}
+h(x)
+&=\tilde{x}^T\theta^*(x)\\
+&=\boxed{
+\tilde{x}^T
+\left(X^TW(x)X\right)^{-1}X^TW(x)y
+}.
+\end{aligned}
+\]
+
+Consequently, the global regression curve is
+\[
+\boxed{
+\mathcal{C}
+=
+\left\{
+(x,h(x)):x\in\mathbb{R}
+\right\}.
+}
+\]
+
+Each local model is linear in its input, but its coefficients
+vary with the query point. Therefore, the resulting global
+regression curve is generally \textbf{nonlinear}, rather than
+a single straight line or a piecewise-linear function.
+
+\medskip
+\noindent
+\textbf{Conclusion.}
+LWR constructs a globally nonlinear prediction function
+by solving a locally weighted linear regression problem
+at every query point. The formulas above assume that
+$X^TW(x)X$ is invertible.
+
+
+\vspace{4mm}
 We will now consider the following dataset, where $x^{(i)}$ is
 one-dimensional:
 \[
@@ -3403,6 +3566,20 @@ red \texttt{o} markers.
 Does the model seem to be under- or overfitting?
 
 % ------------------------------------------------------------
+% solution of 5(b) goes here
+% ------------------------------------------------------------
+
+\medskip
+\noindent\colorbox{yellow}{\textbf{Solution.}}
+\vspace{3mm}
+
+With \(\tau=0.5\), the locally weighted regression model achieves a validation MSE of approximately \(0.3305\).
+ The predicted regression curve is relatively smooth while capturing several nonlinear trends in the training data.
+ There is no obvious evidence of severe overfitting, although the plot alone is insufficient to determine whether the model is underfitting.
+ Comparing validation errors across different bandwidths would provide a more reliable assessment.
+
+
+% ------------------------------------------------------------
 % 5(c)
 % ------------------------------------------------------------
 
@@ -3419,6 +3596,17 @@ in the format described in part (b).
 Report the value of $\tau$ which achieves the lowest MSE on the valid
 split, and finally report the MSE on the test split using this
 $\tau$-value.
+
+
+\medskip
+\noindent\colorbox{yellow}{\textbf{Solution.}}
+\vspace{3mm}
+
+Among the six candidate bandwidths, \(\tau=0.05\) achieves the lowest validation MSE of approximately \(0.012400\). 
+Using this bandwidth, the model obtains a test MSE of approximately \(0.016990\). 
+Larger bandwidths, such as \(\tau=0.5\) and \(\tau=1.0\), produce substantially higher validation errors, suggesting underfitting due to excessive smoothing. 
+Meanwhile, reducing the bandwidth below \(0.05\) does not further improve validation performance, illustrating the tradeoff between local flexibility and generalization.
+
 
 \end{enumerate}
 
