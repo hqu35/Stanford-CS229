@@ -43,4 +43,4 @@ This is not just a collection of homework solutions.
 It is my first experiment in building a more independent,
 rigorous, and AI-assisted approach to education.
 
-**October 2026 — The beginning of a longer journey.**
+**September 2026 — The beginning of a longer journey.**
