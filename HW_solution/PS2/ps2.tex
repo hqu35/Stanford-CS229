@@ -1,0 +1,878 @@
+\documentclass[11pt]{article}
+\usepackage[letterpaper,margin=0.85in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{xcolor}
+\usepackage{enumitem,fancyhdr}
+\usepackage[hidelinks]{hyperref}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{CS229 Problem Set \#2}
+\fancyhead[R]{\thepage}
+\setlength{\headheight}{14pt}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.5em}
+\setlist[enumerate,1]{label=(\alph*),leftmargin=2em,itemsep=0.65em}
+\setlist[enumerate,2]{label=\roman*.,leftmargin=2em,itemsep=0.3em}
+\newcommand{\problem}[2]{\clearpage\section*{#1. #2}}
+\newcommand{\code}[1]{\nolinkurl{#1}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\ind}{\mathbb{I}}
+\begin{document}
+{\Large CS 229, Fall 2018}\par
+{\LARGE\bfseries Problem Set \#2: Supervised Learning II}
+
+Due Wednesday, Oct 31 at 11:59 pm on Gradescope.
+
+\textbf{Notes:} (1) These questions require thought, but do not require long answers. Please be as concise as possible. (2) If you have a question about this homework, we encourage you to post your question on our Piazza forum, at \url{http://piazza.com/stanford/fall2018/cs229}. (3) If you missed the first lecture or are unfamiliar with the collaboration or honor code policy, please read the policy on Handout \#1 (available from the course website) before starting work. (4) For the coding problems, you may not use any libraries except those defined in the provided \code{environment.yml} file. In particular, ML-specific libraries such as scikit-learn are not permitted. (5) To account for late days, the due date listed on Gradescope is Nov 03 at 11:59 pm. If you submit after Oct 31, you will begin consuming your late days. If you wish to submit on time, submit before Oct 31 at 11:59 pm.
+
+All students must submit an electronic PDF version of the written questions. We highly recommend typesetting your solutions via \LaTeX. If you are scanning your document by cell phone, please check the Piazza forum for recommended scanning apps and best practices. All students must also submit a zip file of their source code to Gradescope, which should be created using the \code{make_zip.py} script. In order to pass the auto-grader tests, you should make sure to (1) restrict yourself to only using libraries included in the \code{environment.yml} file, and (2) make sure your code runs without errors when running \code{p05_percept.py} and \code{p06_spam.py}. Your submission will be evaluated by the auto-grader using a private test set.
+
+% Each top-level problem starts on a fresh page; long problems may span pages.
+\problem{1}{[15 points] Logistic Regression: Training stability}
+In this problem, we will be delving deeper into the workings of logistic regression. The goal of this problem is to help you develop your skills debugging machine learning algorithms (which can be very different from debugging software in general).
+
+We have provided a implementation of logistic regression in \code{src/p01_lr.py}, and two labeled datasets A and B in \code{data/ds1_a.txt} and \code{data/ds1_b.txt}.
+
+Please do not modify the code for the logistic regression training algorithm for this problem. First, run the given logistic regression code to train two different models on A and B. You can run the code by simply executing \code{python p01_lr.py} in the \code{src} directory.
+\begin{enumerate}
+\item \textbf{[2 points]} What is the most notable difference in training the logistic regression model on datasets A and B?
+\item \textbf{[5 points]} Investigate why the training procedure behaves unexpectedly on dataset B, but not on A. Provide hard evidence (in the form of math, code, plots, etc.) to corroborate your hypothesis for the misbehavior. Remember, you should address why your explanation does not apply to A.
+
+\textit{Hint:} The issue is not a numerical rounding or over/underflow error.
+\item \textbf{[5 points]} For each of these possible modifications, state whether or not it would lead to the provided training algorithm converging on datasets such as B. Justify your answers.
+\begin{enumerate}
+\item Using a different constant learning rate.
+\item Decreasing the learning rate over time (e.g. scaling the initial learning rate by $1/t^2$, where $t$ is the number of gradient descent iterations thus far).
+\item Linear scaling of the input features.
+\item Adding a regularization term $\|\theta\|_2^2$ to the loss function.
+\item Adding zero-mean Gaussian noise to the training data or labels.
+\end{enumerate}
+\item \textbf{[3 points]} Are support vector machines, which use the hinge loss, vulnerable to datasets like B? Why or why not? Give an informal justification.
+\end{enumerate}
+\textit{Hint:} Recall the distinction between functional margin and geometric margin.
+
+\problem{2}{[10 points] Model Calibration}
+In this question we will try to understand the output $h_\theta(x)$ of the hypothesis function of a logistic regression model, in particular why we might treat the output as a probability (besides the fact that the sigmoid function ensures $h_\theta(x)$ always lies in the interval $(0,1)$).
+
+When the probabilities outputted by a model match empirical observation, the model is said to be well-calibrated (or reliable). For example, if we consider a set of examples $x^{(i)}$ for which $h_\theta(x^{(i)})\approx0.7$, around 70\% of those examples should have positive labels. In a well-calibrated model, this property will hold true at every probability value.
+
+Logistic regression tends to output well-calibrated probabilities (this is often not true with other classifiers such as Naive Bayes, or SVMs). We will dig a little deeper in order to understand why this is the case, and find that the structure of the loss function explains this property.
+
+Suppose we have a training set $\{x^{(i)},y^{(i)}\}_{i=1}^m$ with $x^{(i)}\in\R^{n+1}$ and $y^{(i)}\in\{0,1\}$. Assume we have an intercept term $x_0^{(i)}=1$ for all $i$. Let $\theta\in\R^{n+1}$ be the maximum likelihood parameters learned after training a logistic regression model. In order for the model to be considered well-calibrated, given any range of probabilities $(a,b)$ such that $0\leq a<b\leq1$, and training examples $x^{(i)}$ where the model outputs $h_\theta(x^{(i)})$ fall in the range $(a,b)$, the fraction of positives in that set of examples should be equal to the average of the model outputs for those examples. That is, the following property must hold:
+\[
+\frac{\sum_{i\in I_{a,b}}P\!\left(y^{(i)}=1\mid x^{(i)};\theta\right)}{|\{i\in I_{a,b}\}|}
+=\frac{\sum_{i\in I_{a,b}}\ind\{y^{(i)}=1\}}{|\{i\in I_{a,b}\}|},
+\]
+where $P(y=1\mid x;\theta)=h_\theta(x)=1/(1+\exp(-\theta^\top x))$, $I_{a,b}=\{i\mid i\in\{1,\ldots,m\},h_\theta(x^{(i)})\in(a,b)\}$ is an index set of all training examples $x^{(i)}$ where $h_\theta(x^{(i)})\in(a,b)$, and $|S|$ denotes the size of the set $S$.
+\begin{enumerate}
+\item \textbf{[5 points]} Show that the above property holds true for the described logistic regression model over the range $(a,b)=(0,1)$.
+
+\textit{Hint:} Use the fact that we include a bias term.
+\item \textbf{[3 points]} If we have a binary classification model that is perfectly calibrated---that is, the property we just proved holds for any $(a,b)\subset[0,1]$---does this necessarily imply that the model achieves perfect accuracy? Is the converse necessarily true? Justify your answers.
+\item \textbf{[2 points]} Discuss what effect including $L_2$ regularization in the logistic regression objective has on model calibration.
+\end{enumerate}
+\textit{Remark:} We considered the range $(a,b)=(0,1)$. This is the only range for which logistic regression is guaranteed to be calibrated on the training set. When the GLM modeling assumptions hold, all ranges $(a,b)\subset[0,1]$ are well calibrated. In addition, when the training and test set are from the same distribution and when the model has not overfit or underfit, logistic regression tends to be well-calibrated on unseen test data as well. This makes logistic regression a very popular model in practice, especially when we are interested in the level of uncertainty in the model output.
+
+\problem{3}{[20 points] Bayesian Interpretation of Regularization}
+\textbf{Background:} In Bayesian statistics, almost every quantity is a random variable, which can either be observed, or unobserved. For instance, parameters $\theta$ are generally unobserved random variables, and data $x$ and $y$ are observed random variables. The joint distribution of all the random variables is also called the model (e.g $p(x,y,\theta)$). Every unknown quantity can be estimated by conditioning the model on all the observed quantities. Such a conditional distribution over the unobserved random variables, conditioned on the observed random variables, is called the posterior distribution. For instance $p(\theta\mid x,y)$ is the posterior distribution in the machine learning context. A consequence of this approach is that, we are required to endow our model parameters, i.e.\ $p(\theta)$, with a prior distribution. The prior probabilities are to be assigned before we see the data -- they need to capture our prior beliefs of what the model parameters might be before observing any evidence, and must be a subjective opinion by the person building the model.
+
+In the purest Bayesian interpretation, we are required to keep the entire posterior distribution over the parameters all the way until prediction, to come up with the posterior predictive distribution, and the final prediction will be the expected value of the posterior predictive distribution. However in most situations, this is computationally very expensive, and we settle for a compromise that is less pure (in the Bayesian sense).
+
+The compromise is to estimate a point value of the parameters (instead of the full distribution) which is the mode of the posterior distribution. Estimating the mode of the posterior distribution is also called maximum a posteriori estimation (MAP). That is,
+\[\theta_{\mathrm{MAP}}=\arg\max_\theta p(\theta\mid x,y).\]
+Compare this to the maximum likelihood estimation (MLE) we have seen previously:
+\[\theta_{\mathrm{MLE}}=\arg\max_\theta p(y\mid x,\theta).\]
+In this problem, we explore the connection between MAP estimation, and common regularization techniques that are applied with MLE estimation. In particular, you will show how the choice of prior distribution over $\theta$ (e.g Gaussian, or Laplace prior) is equivalent to different kinds of regularization (e.g $L_2$, or $L_1$ regularization). To show this, we shall proceed step by step, showing intermediate steps.
+\begin{enumerate}
+\item \textbf{[3 points]} Show that $\theta_{\mathrm{MAP}}=\arg\max_\theta p(y\mid x,\theta)p(\theta)$ if we assume that $p(\theta)=p(\theta\mid x)$. The assumption that $p(\theta)=p(\theta\mid x)$ will be valid for models such as linear regression where the input $x$ are not explicitly modeled by $\theta$. (Note that this means $x$ and $\theta$ are marginally independent, but not conditionally independent when $y$ is given.)
+\item \textbf{[5 points]} Recall that $L_2$ regularization penalizes the $L_2$ norm of the parameters while minimizing the loss (i.e., negative log likelihood in case of probabilistic models). Now we will show that MAP estimation with a zero-mean Gaussian prior over $\theta$, specifically $\theta\sim\mathcal{N}(0,\eta^2I)$, is equivalent to applying $L_2$ regularization with MLE estimation. Specifically, show that
+\[\theta_{\mathrm{MAP}}=\arg\min_\theta\left[-\log p(y\mid x,\theta)+\lambda\|\theta\|_2^2\right].\]
+Also, what is the value of $\lambda$?
+\item \textbf{[7 points]} Now consider a specific instance, a linear regression model given by $y=\theta^Tx+\epsilon$ where $\epsilon\sim\mathcal{N}(0,\sigma^2)$. Like before, assume a Gaussian prior on this model such that $\theta\sim\mathcal{N}(0,\eta^2I)$. For notation, let $X$ be the design matrix of all the training example inputs where each row vector is one example input, and $\vec{y}$ be the column vector of all the example outputs.
+
+Come up with a closed form expression for $\theta_{\mathrm{MAP}}$.
+\item \textbf{[5 points]} Next, consider the Laplace distribution, whose density is given by
+\[f_L(z\mid\mu,b)=\frac{1}{2b}\exp\left(-\frac{|z-\mu|}{b}\right).\]
+As before, consider a linear regression model given by $y=x^T\theta+\epsilon$ where $\epsilon\sim\mathcal{N}(0,\sigma^2)$. Assume a Laplace prior on this model where $\theta\sim\mathcal{L}(0,bI)$.
+
+Show that $\theta_{\mathrm{MAP}}$ in this case is equivalent to the solution of linear regression with $L_1$ regularization, whose loss is specified as
+\[J(\theta)=\|X\theta-\vec{y}\|_2^2+\gamma\|\theta\|_1.\]
+Also, what is the value of $\gamma$?
+
+\textit{Note:} A closed form solution for linear regression problem with $L_1$ regularization does not exist. To optimize this, we use gradient descent with a random initialization and solve it numerically.
+\end{enumerate}
+\textit{Remark:} Linear regression with $L_2$ regularization is also commonly called Ridge regression, and when $L_1$ regularization is employed, is commonly called Lasso regression. These regularizations can be applied to any Generalized Linear models just as above (by replacing $\log p(y\mid x,\theta)$ with the appropriate family likelihood). Regularization techniques of the above type are also called weight decay, and shrinkage. The Gaussian and Laplace priors encourage the parameter values to be closer to their mean (i.e., zero), which results in the shrinkage effect.
+
+\textit{Remark:} Lasso regression (i.e $L_1$ regularization) is known to result in sparse parameters, where most of the parameter values are zero, with only some of them non-zero.
+
+\problem{4}{[18 points] Constructing kernels}
+In class, we saw that by choosing a kernel $K(x,z)=\phi(x)^T\phi(z)$, we can implicitly map data to a high dimensional space, and have the SVM algorithm work in that space. One way to generate kernels is to explicitly define the mapping $\phi$ to a higher dimensional space, and then work out the corresponding $K$.
+
+However in this question we are interested in direct construction of kernels. I.e., suppose we have a function $K(x,z)$ that we think gives an appropriate similarity measure for our learning problem, and we are considering plugging $K$ into the SVM as the kernel function. However for $K(x,z)$ to be a valid kernel, it must correspond to an inner product in some higher dimensional space resulting from some feature mapping $\phi$. Mercer's theorem tells us that $K(x,z)$ is a (Mercer) kernel if and only if for any finite set $\{x^{(1)},\ldots,x^{(m)}\}$, the square matrix $K\in\R^{m\times m}$ whose entries are given by $K_{ij}=K(x^{(i)},x^{(j)})$ is symmetric and positive semidefinite. You can find more details about Mercer's theorem in the notes, though the description above is sufficient for this problem.
+
+Now here comes the question: Let $K_1,K_2$ be kernels over $\R^n\times\R^n$, let $a\in\R^+$ be a positive real number, let $f:\R^n\mapsto\R$ be a real-valued function, let $\phi:\R^n\to\R^d$ be a function mapping from $\R^n$ to $\R^d$, let $K_3$ be a kernel over $\R^d\times\R^d$, and let $p(x)$ a polynomial over $x$ with positive coefficients.
+
+For each of the functions $K$ below, state whether it is necessarily a kernel. If you think it is, prove it; if you think it isn't, give a counter-example.
+\begin{enumerate}
+\item \textbf{[1 points]} $K(x,z)=K_1(x,z)+K_2(x,z)$
+\item \textbf{[1 points]} $K(x,z)=K_1(x,z)-K_2(x,z)$
+\item \textbf{[1 points]} $K(x,z)=aK_1(x,z)$
+\item \textbf{[1 points]} $K(x,z)=-aK_1(x,z)$
+\item \textbf{[5 points]} $K(x,z)=K_1(x,z)K_2(x,z)$
+\item \textbf{[3 points]} $K(x,z)=f(x)f(z)$
+\item \textbf{[3 points]} $K(x,z)=K_3(\phi(x),\phi(z))$
+\item \textbf{[3 points]} $K(x,z)=p(K_1(x,z))$
+\end{enumerate}
+[Hint: For part (e), the answer is that $K$ is indeed a kernel. You still have to prove it, though. (This one may be harder than the rest.) This result may also be useful for another part of the problem.]
+
+
+\medskip
+\noindent\colorbox{yellow}{\textbf{Solution.}}
+\vspace{3mm}
+
+Throughout this problem, we use the following kernel
+characterization theorem: a symmetric function
+\[
+K:\mathbb R^n\times\mathbb R^n\to\mathbb R
+\]
+is a valid kernel if and only if, for every finite
+collection of points
+$x^{(1)},\ldots,x^{(N)}\in\mathbb R^n$, its Gram matrix
+\[
+G_{ij}=K(x^{(i)},x^{(j)})
+\]
+is positive semidefinite.
+
+\bigskip
+\noindent\textbf{(a) Yes.}
+
+Let
+\[
+K(x,z)=K_1(x,z)+K_2(x,z).
+\]
+
+\medskip
+\noindent\textbf{Method 1: Gram Matrix Characterization.}
+
+Since $K_1$ and $K_2$ are valid kernels, they are symmetric.
+Hence,
+\[
+\begin{aligned}
+K(x,z)
+&=K_1(x,z)+K_2(x,z)\\
+&=K_1(z,x)+K_2(z,x)\\
+&=K(z,x).
+\end{aligned}
+\]
+
+Thus $K$ is symmetric.
+
+Now fix an arbitrary $N\geq1$ and arbitrary points
+$x^{(1)},\ldots,x^{(N)}\in\mathbb R^n$.
+
+Let $G_1,G_2$ be the corresponding Gram matrices:
+\[
+(G_1)_{ij}=K_1(x^{(i)},x^{(j)}),
+\qquad
+(G_2)_{ij}=K_2(x^{(i)},x^{(j)}).
+\]
+
+Since $K_1,K_2$ are valid,
+\[
+G_1\succeq0,
+\qquad
+G_2\succeq0.
+\]
+
+The Gram matrix of $K$ is
+\[
+G=G_1+G_2.
+\]
+
+For any $c\in\mathbb R^N$,
+\[
+\begin{aligned}
+c^TGc
+&=c^T(G_1+G_2)c\\
+&=c^TG_1c+c^TG_2c\\
+&\geq0.
+\end{aligned}
+\]
+
+Therefore $G\succeq0$.
+
+Since the chosen finite collection was arbitrary,
+the kernel characterization theorem implies
+\[
+\boxed{K_1+K_2\text{ is a valid kernel.}}
+\]
+
+\medskip
+\noindent\textbf{Method 2: Direct Sum of Feature Spaces.}
+
+Since $K_1$ and $K_2$ are valid kernels, there exist
+Hilbert spaces $\mathcal H_1,\mathcal H_2$ and
+feature mappings $\phi_1,\phi_2$ such that
+\[
+K_1(x,z)
+=\langle\phi_1(x),\phi_1(z)\rangle_{\mathcal H_1}
+\]
+and
+\[
+K_2(x,z)
+=\langle\phi_2(x),\phi_2(z)\rangle_{\mathcal H_2}.
+\]
+
+Consider the direct sum
+\[
+\mathcal H=\mathcal H_1\oplus\mathcal H_2
+=
+\{(u_1,u_2):u_i\in\mathcal H_i\}.
+\]
+
+Define
+\[
+\begin{aligned}
+&\langle(u_1,u_2),(v_1,v_2)\rangle_{\mathcal H}\\
+&\qquad=
+\langle u_1,v_1\rangle_{\mathcal H_1}
++
+\langle u_2,v_2\rangle_{\mathcal H_2}.
+\end{aligned}
+\]
+
+This defines an inner product on $\mathcal H$.
+Indeed, bilinearity and symmetry follow componentwise
+from the corresponding properties in $\mathcal H_1$
+and $\mathcal H_2$.
+
+Furthermore,
+\[
+\begin{aligned}
+\langle(u_1,u_2),(u_1,u_2)\rangle_{\mathcal H}
+&=\|u_1\|_{\mathcal H_1}^2
++\|u_2\|_{\mathcal H_2}^2\\
+&\geq0,
+\end{aligned}
+\]
+with equality if and only if $u_1=u_2=0$.
+
+Completeness follows because a Cauchy sequence
+in $\mathcal H$ has Cauchy component sequences
+in $\mathcal H_1$ and $\mathcal H_2$, both of
+which converge.
+
+Hence $\mathcal H$ is a Hilbert space.
+
+Now define
+\[
+\psi(x)=(\phi_1(x),\phi_2(x))\in\mathcal H.
+\]
+
+Then
+\[
+\begin{aligned}
+\langle\psi(x),\psi(z)\rangle_{\mathcal H}
+&=
+\langle\phi_1(x),\phi_1(z)\rangle_{\mathcal H_1}\\
+&\quad+
+\langle\phi_2(x),\phi_2(z)\rangle_{\mathcal H_2}\\
+&=K_1(x,z)+K_2(x,z)\\
+&=K(x,z).
+\end{aligned}
+\]
+
+Thus $K$ admits an inner-product representation
+and is a valid kernel.
+\hfill$\square$
+
+\bigskip
+\noindent\textbf{(b) No, not necessarily.}
+
+\textbf{Counterexample.}
+
+Choose
+\[
+K_1(x,z)=1,
+\qquad
+K_2(x,z)=2.
+\]
+
+Both functions are valid constant kernels.
+Indeed, take the one-dimensional feature mappings
+\[
+\phi_1(x)=1,
+\qquad
+\phi_2(x)=\sqrt{2}.
+\]
+
+Then
+\[
+K_1(x,z)=\phi_1(x)\phi_1(z),
+\qquad
+K_2(x,z)=\phi_2(x)\phi_2(z).
+\]
+
+However,
+\[
+K(x,z)=K_1(x,z)-K_2(x,z)=-1.
+\]
+
+For any $x\in\mathbb R^n$, choose $N=1$.
+The corresponding Gram matrix is
+\[
+G=[K(x,x)]=[-1].
+\]
+
+Taking $c=1$ gives
+\[
+c^TGc=-1<0.
+\]
+
+Thus $G$ is not positive semidefinite.
+Consequently,
+\[
+\boxed{
+K_1-K_2\text{ is not necessarily a valid kernel.}
+}
+\]
+\hfill$\square$
+
+\bigskip
+\noindent\textbf{(c) Yes.}
+
+Let
+\[
+K(x,z)=aK_1(x,z),
+\qquad a>0.
+\]
+
+\textbf{Proof.}
+
+Since $K_1$ is symmetric,
+\[
+\begin{aligned}
+K(x,z)
+&=aK_1(x,z)\\
+&=aK_1(z,x)\\
+&=K(z,x).
+\end{aligned}
+\]
+
+Fix arbitrary points
+$x^{(1)},\ldots,x^{(N)}\in\mathbb R^n$,
+and let $G_1$ be the Gram matrix associated with $K_1$.
+
+The Gram matrix of $K$ is
+\[
+G=aG_1.
+\]
+
+For every $c\in\mathbb R^N$,
+\[
+\begin{aligned}
+c^TGc
+&=c^T(aG_1)c\\
+&=a(c^TG_1c)\\
+&\geq0,
+\end{aligned}
+\]
+because $a>0$ and $G_1\succeq0$.
+
+Therefore $G\succeq0$, so
+\[
+\boxed{aK_1\text{ is a valid kernel.}}
+\]
+\hfill$\square$
+
+\bigskip
+\noindent\textbf{(d) No, not necessarily.}
+
+Let
+\[
+K(x,z)=-aK_1(x,z),
+\qquad a>0.
+\]
+
+\textbf{Counterexample.}
+
+Choose the valid constant kernel
+\[
+K_1(x,z)=1.
+\]
+
+Then
+\[
+K(x,z)=-a.
+\]
+
+For any $x\in\mathbb R^n$, the Gram matrix
+associated with the single observation $x$ is
+\[
+G=[-a].
+\]
+
+Since $a>0$, taking $c=1$ gives
+\[
+c^TGc=-a<0.
+\]
+
+Therefore $G$ is not positive semidefinite.
+Hence
+\[
+\boxed{
+-aK_1\text{ is not necessarily a valid kernel.}
+}
+\]
+\hfill$\square$
+
+\bigskip
+\noindent\textbf{(e) Yes.}
+
+Let
+\[
+K(x,z)=K_1(x,z)K_2(x,z).
+\]
+
+We prove this result using Gram matrix factorization
+and the tensor-product identity.
+
+\medskip
+\noindent\textbf{Lemma (Gram Matrix Factorization).}
+
+Let $G\in\mathbb R^{N\times N}$ be symmetric and
+positive semidefinite. Then there exists a matrix
+$A\in\mathbb R^{N\times N}$ such that
+\[
+\boxed{G=A^TA.}
+\]
+
+Equivalently, there exist vectors
+$u_1,\ldots,u_N\in\mathbb R^N$ satisfying
+\[
+G_{ij}=u_i^Tu_j.
+\]
+
+\textit{Proof of Lemma.}
+
+Since $G$ is real symmetric, the spectral theorem
+gives
+\[
+G=U\Lambda U^T,
+\]
+where $U$ is orthogonal and
+\[
+\Lambda=\operatorname{diag}
+(\lambda_1,\ldots,\lambda_N).
+\]
+
+Because $G\succeq0$, every eigenvalue satisfies
+$\lambda_i\geq0$. Thus
+\[
+\Lambda^{1/2}
+=
+\operatorname{diag}
+(\sqrt{\lambda_1},\ldots,\sqrt{\lambda_N})
+\]
+is well-defined.
+
+Set
+\[
+A=\Lambda^{1/2}U^T.
+\]
+
+Then
+\[
+\begin{aligned}
+A^TA
+&=(\Lambda^{1/2}U^T)^T
+  (\Lambda^{1/2}U^T)\\
+&=U\Lambda^{1/2}\Lambda^{1/2}U^T\\
+&=U\Lambda U^T\\
+&=G.
+\end{aligned}
+\]
+
+Let $e_i$ denote the $i$-th standard basis vector
+in $\mathbb R^N$, and define
+\[
+u_i=Ae_i.
+\]
+
+Then
+\[
+\begin{aligned}
+G_{ij}
+&=e_i^TGe_j\\
+&=e_i^TA^TAe_j\\
+&=(Ae_i)^T(Ae_j)\\
+&=u_i^Tu_j.
+\end{aligned}
+\]
+
+This completes the lemma.
+\hfill$\square$
+
+\medskip
+\noindent\textbf{Proof of (e).}
+
+First, $K$ is symmetric since
+\[
+\begin{aligned}
+K(x,z)
+&=K_1(x,z)K_2(x,z)\\
+&=K_1(z,x)K_2(z,x)\\
+&=K(z,x).
+\end{aligned}
+\]
+
+Now fix arbitrary $N\geq1$ and arbitrary points
+\[
+x^{(1)},\ldots,x^{(N)}\in\mathbb R^n.
+\]
+
+Let $G_1,G_2$ be the Gram matrices of $K_1,K_2$:
+\[
+(G_1)_{ij}=K_1(x^{(i)},x^{(j)}),
+\]
+\[
+(G_2)_{ij}=K_2(x^{(i)},x^{(j)}).
+\]
+
+By kernel validity,
+\[
+G_1\succeq0,
+\qquad G_2\succeq0.
+\]
+
+Applying the Gram factorization lemma,
+there exist vectors
+\[
+u_1,\ldots,u_N\in\mathbb R^N,
+\qquad
+v_1,\ldots,v_N\in\mathbb R^N
+\]
+such that
+\[
+(G_1)_{ij}=u_i^Tu_j,
+\qquad
+(G_2)_{ij}=v_i^Tv_j.
+\]
+
+Define
+\[
+w_i=u_i\otimes v_i\in\mathbb R^{N^2},
+\]
+where $\otimes$ denotes the Kronecker product.
+
+Explicitly, the coordinates of $w_i$ are indexed
+by ordered pairs $(r,s)$:
+\[
+(w_i)_{(r,s)}
+=(u_i)_r(v_i)_s,
+\qquad
+1\leq r,s\leq N.
+\]
+
+We claim that
+\[
+\boxed{
+(u_i^Tu_j)(v_i^Tv_j)=w_i^Tw_j.
+}
+\]
+
+Indeed,
+\[
+\begin{aligned}
+w_i^Tw_j
+&=
+\sum_{r=1}^{N}\sum_{s=1}^{N}
+(w_i)_{(r,s)}(w_j)_{(r,s)}\\
+&=
+\sum_{r=1}^{N}\sum_{s=1}^{N}
+(u_i)_r(v_i)_s(u_j)_r(v_j)_s\\
+&=
+\sum_{r=1}^{N}\sum_{s=1}^{N}
+\big((u_i)_r(u_j)_r\big)
+\big((v_i)_s(v_j)_s\big)\\
+&=
+\left(\sum_{r=1}^{N}(u_i)_r(u_j)_r\right)
+\left(\sum_{s=1}^{N}(v_i)_s(v_j)_s\right)\\
+&=(u_i^Tu_j)(v_i^Tv_j).
+\end{aligned}
+\]
+
+Now let $G$ be the Gram matrix of the proposed
+product kernel $K$.
+
+For every $1\leq i,j\leq N$,
+\[
+\begin{aligned}
+G_{ij}
+&=K(x^{(i)},x^{(j)})\\
+&=K_1(x^{(i)},x^{(j)})
+  K_2(x^{(i)},x^{(j)})\\
+&=(G_1)_{ij}(G_2)_{ij}\\
+&=(u_i^Tu_j)(v_i^Tv_j)\\
+&=w_i^Tw_j.
+\end{aligned}
+\]
+
+Thus $G$ is itself a Gram matrix, namely
+the Gram matrix of the vectors $w_1,\ldots,w_N$.
+
+For any $c\in\mathbb R^N$,
+\[
+\begin{aligned}
+c^TGc
+&=\sum_{i=1}^{N}\sum_{j=1}^{N}
+c_ic_jG_{ij}\\
+&=\sum_{i=1}^{N}\sum_{j=1}^{N}
+c_ic_jw_i^Tw_j\\
+&=
+\left(\sum_{i=1}^{N}c_iw_i\right)^T
+\left(\sum_{j=1}^{N}c_jw_j\right)\\
+&=
+\left\|\sum_{i=1}^{N}c_iw_i\right\|_2^2\\
+&\geq0.
+\end{aligned}
+\]
+
+Hence $G\succeq0$.
+
+Since the finite collection was arbitrary,
+all finite Gram matrices of $K$ are PSD.
+
+Together with symmetry, the kernel characterization
+theorem gives
+\[
+\boxed{
+K_1(x,z)K_2(x,z)\text{ is a valid kernel.}
+}
+\]
+\hfill$\square$
+
+\bigskip
+\noindent\textbf{(f) Yes.}
+
+Let
+\[
+K(x,z)=f(x)f(z),
+\]
+where $f:\mathbb R^n\to\mathbb R$ is any real-valued
+function.
+
+\textbf{Proof.}
+
+Choose the feature space
+\[
+\mathcal H=\mathbb R
+\]
+equipped with the standard inner product
+\[
+\langle a,b\rangle_{\mathbb R}=ab.
+\]
+
+Define the feature mapping
+\[
+\psi:\mathbb R^n\to\mathbb R,
+\qquad
+\psi(x)=f(x).
+\]
+
+Then for any $x,z\in\mathbb R^n$,
+\[
+\begin{aligned}
+\langle\psi(x),\psi(z)\rangle_{\mathbb R}
+&=\psi(x)\psi(z)\\
+&=f(x)f(z)\\
+&=K(x,z).
+\end{aligned}
+\]
+
+Therefore $K$ admits an inner-product representation,
+and
+\[
+\boxed{f(x)f(z)\text{ is a valid kernel.}}
+\]
+\hfill$\square$
+
+\bigskip
+\noindent\textbf{(g) Yes.}
+
+Let
+\[
+K(x,z)=K_3(\phi(x),\phi(z)),
+\]
+where
+\[
+\phi:\mathbb R^n\to\mathbb R^d
+\]
+and $K_3$ is a valid kernel on
+$\mathbb R^d\times\mathbb R^d$.
+
+\textbf{Proof.}
+
+Since $K_3$ is valid, there exist a Hilbert space
+$\mathcal H$ and a feature mapping
+\[
+\psi:\mathbb R^d\to\mathcal H
+\]
+such that
+\[
+K_3(u,v)
+=
+\langle\psi(u),\psi(v)\rangle_{\mathcal H},
+\qquad \forall u,v\in\mathbb R^d.
+\]
+
+Define the composed mapping
+\[
+\widetilde\phi
+=
+\psi\circ\phi:
+\mathbb R^n\to\mathcal H.
+\]
+
+Then
+\[
+\begin{aligned}
+K(x,z)
+&=K_3(\phi(x),\phi(z))\\
+&=
+\langle
+\psi(\phi(x)),\psi(\phi(z))
+\rangle_{\mathcal H}\\
+&=
+\langle
+\widetilde\phi(x),\widetilde\phi(z)
+\rangle_{\mathcal H}.
+\end{aligned}
+\]
+
+Thus $K$ admits an inner-product representation,
+so
+\[
+\boxed{
+K_3(\phi(x),\phi(z))\text{ is a valid kernel.}
+}
+\]
+\hfill$\square$
+
+\bigskip
+\noindent\textbf{(h) Yes.}
+
+Let
+\[
+K(x,z)=p(K_1(x,z)),
+\]
+where $p$ is a polynomial with positive coefficients.
+
+\textbf{Proof.}
+
+Write
+\[
+p(t)=\sum_{k=0}^{m}a_kt^k,
+\qquad a_k>0.
+\]
+
+Then
+\[
+K(x,z)
+=
+\sum_{k=0}^{m}a_k[K_1(x,z)]^k.
+\]
+
+For $k=0$, the corresponding term is
+\[
+a_0[K_1(x,z)]^0=a_0>0.
+\]
+
+This is a valid constant kernel. Indeed, defining
+\[
+\psi_0(x)=\sqrt{a_0}\in\mathbb R
+\]
+gives
+\[
+\langle\psi_0(x),\psi_0(z)\rangle_{\mathbb R}
+=a_0.
+\]
+
+For each integer $k\geq1$, repeated application
+of the product rule established in part (e)
+shows that
+\[
+[K_1(x,z)]^k
+\]
+is a valid kernel.
+
+Since $a_k>0$, the positive-scaling rule from
+part (c) implies that
+\[
+a_k[K_1(x,z)]^k
+\]
+is also a valid kernel.
+
+Finally, by repeated application of the sum rule
+from part (a), the finite sum
+\[
+K(x,z)=
+\sum_{k=0}^{m}a_k[K_1(x,z)]^k
+\]
+is a valid kernel.
+
+Therefore,
+\[
+\boxed{
+p(K_1(x,z))\text{ is a valid kernel.}
+}
+\]
+\hfill$\square$
+
+
+
+\problem{5}{[16 points] Kernelizing the Perceptron}
+Let there be a binary classification problem with $y\in\{0,1\}$. The perceptron uses hypotheses of the form $h_\theta(x)=g(\theta^Tx)$, where $g(z)=\operatorname{sign}(z)=1$ if $z\geq0$, $0$ otherwise. In this problem we will consider a stochastic gradient descent-like implementation of the perceptron algorithm where each update to the parameters $\theta$ is made using only one training example. However, unlike stochastic gradient descent, the perceptron algorithm will only make one pass through the entire training set. The update rule for this version of the perceptron algorithm is given by
+\[\theta^{(i+1)}:=\theta^{(i)}+\alpha\bigl(y^{(i+1)}-h_{\theta^{(i)}}(x^{(i+1)})\bigr)x^{(i+1)}\]
+where $\theta^{(i)}$ is the value of the parameters after the algorithm has seen the first $i$ training examples. Prior to seeing any training examples, $\theta^{(0)}$ is initialized to $\vec{0}$.
+\begin{enumerate}
+\item \textbf{[9 points]} Let $K$ be a Mercer kernel corresponding to some very high-dimensional feature mapping $\phi$. Suppose $\phi$ is so high-dimensional (say, $\infty$-dimensional) that it's infeasible to ever represent $\phi(x)$ explicitly. Describe how you would apply the ``kernel trick'' to the perceptron to make it work in the high-dimensional feature space $\phi$, but without ever explicitly computing $\phi(x)$.
+
+[Note: You don't have to worry about the intercept term. If you like, think of $\phi$ as having the property that $\phi_0(x)=1$ so that this is taken care of.] Your description should specify:
+\begin{enumerate}
+\item \textbf{[3 points]} How you will (implicitly) represent the high-dimensional parameter vector $\theta^{(i)}$, including how the initial value $\theta^{(0)}=0$ is represented (note that $\theta^{(i)}$ is now a vector whose dimension is the same as the feature vectors $\phi(x)$);
+\item \textbf{[3 points]} How you will efficiently make a prediction on a new input $x^{(i+1)}$. I.e., how you will compute $h_{\theta^{(i)}}(x^{(i+1)})=g\bigl(\theta^{(i)T}\phi(x^{(i+1)})\bigr)$, using your representation of $\theta^{(i)}$; and
+\item \textbf{[3 points]} How you will modify the update rule given above to perform an update to $\theta$ on a new training example $(x^{(i+1)},y^{(i+1)})$; i.e., using the update rule corresponding to the feature mapping $\phi$:
+\[\theta^{(i+1)}:=\theta^{(i)}+\alpha\bigl(y^{(i+1)}-h_{\theta^{(i)}}(x^{(i+1)})\bigr)x^{(i+1)}\]
+\end{enumerate}
+\item \textbf{[5 points]} Implement your approach by completing the \code{initial_state}, \code{predict}, and \code{update_state} methods of \code{src/p05_percept.py}.
+\item \textbf{[2 points]} Run \code{src/p05_percept.py} to train kernelized perceptrons on \code{data/ds5_train.csv}. The code will then test the perceptron on \code{data/ds5_test.csv} and save the resulting predictions in the \code{src/output} folder. Plots will also be saved in \code{src/output}. We provide two kernels, a dot product kernel and an radial basis function (rbf) kernel. One of the provided kernels performs extremely poorly in classifying the points. Which kernel performs badly and why does it fail?
+\end{enumerate}
+
+\problem{6}{[22 points] Spam classification}
+In this problem, we will use the naive Bayes algorithm and an SVM to build a spam classifier. In recent years, spam on electronic media has been a growing concern. Here, we'll build a classifier to distinguish between real messages, and spam messages. For this class, we will be building a classifier to detect SMS spam messages. We will be using an SMS spam dataset developed by Tiago A. Almedia and Jos\'e Mar\'ia G\'omez Hidalgo which is publicly available on \url{http://www.dt.fee.unicamp.br/~tiago/smsspamcollection}\footnote{Almeida, T.A., G\'omez Hidalgo, J.M., Yamakami, A. Contributions to the Study of SMS Spam Filtering: New Collection and Results. Proceedings of the 2011 ACM Symposium on Document Engineering (DOCENG'11), Mountain View, CA, USA, 2011.}
+
+We have split this dataset into training and testing sets and have included them in this assignment as \code{data/ds6_spam_train.tsv} and \code{data/ds6_spam_test.tsv}. See \code{data/ds6_readme.txt} for more details about this dataset. Please refrain from redistributing these dataset files. The goal of this assignment is to build a classifier from scratch that can tell the difference the spam and non-spam messages using the text of the SMS message.
+\begin{enumerate}
+\item \textbf{[5 points]} Implement code for processing the the spam messages into numpy arrays that can be fed into machine learning models. Do this by completing the \code{get_words}, \code{create_dictionary}, and \code{transform_text} functions within our provided \code{src/p06_spam.py}. Do note the corresponding comments for each function for instructions on what specific processing is required.
+
+The provided code will then run your functions and save the resulting dictionary into \code{output/p06_dictionary} and a sample of the resulting training matrix into \code{output/p06_sample_train_matrix}.
+\item \textbf{[10 points]} In this question you are going to implement a naive Bayes classifier for spam classification with multinomial event model and Laplace smoothing (refer to class notes on Naive Bayes for details on Laplace smoothing).
+
+Write your implementation by completing the \code{fit_naive_bayes_model} and \code{predict_from_naive_bayes_model} functions in \code{src/p06_spam.py}.
+
+\code{src/p06_spam.py} should then be able to train a Naive Bayes model, compute your prediction accuracy and then save your resulting predictions to \code{output/p06_naive_bayes_predictions}.
+
+\textit{Remark.} If you implement naive Bayes the straightforward way, you'll find that the computed $p(x\mid y)=\prod_i p(x_i\mid y)$ often equals zero. This is because $p(x\mid y)$, which is the product of many numbers less than one, is a very small number. The standard computer representation of real numbers cannot handle numbers that are too small, and instead rounds them off to zero. (This is called ``underflow.'') You'll have to find a way to compute Naive Bayes' predicted class labels without explicitly representing very small numbers such as $p(x\mid y)$. [Hint: Think about using logarithms.]
+\item \textbf{[5 points]} Intuitively, some tokens may be particularly indicative of an SMS being in a particular class. We can try to get an informal sense of how indicative token $i$ is for the SPAM class by looking at:
+\[\log\frac{p(x_j=i\mid y=1)}{p(x_j=i\mid y=0)}=\log\left(\frac{P(\text{token }i\mid\text{email is SPAM})}{P(\text{token }i\mid\text{email is NOTSPAM})}\right).\]
+Complete the \code{get_top_five_naive_bayes_words} function within the provided code using the above formula in order to obtain the 5 most indicative tokens.
+
+The provided code will print out the resulting indicative tokens and then save them to \code{output/p06_top_indicative_words}.
+\item \textbf{[2 points]} Support vector machines (SVMs) are an alternative machine learning model that we discussed in class. We have provided you an SVM implementation (using a radial basis function (RBF) kernel) within \code{src/svm.py} (You should not need to modify that code). One important part of training an SVM parameterized by an RBF kernel is choosing an appropriate kernel radius.
+
+Complete the \code{compute_best_svm_radius} by writing code to compute the best SVM radius which maximizes accuracy on the validation dataset.
+
+The provided code will use your \code{compute_best_svm_radius} to compute and then write the best radius into \code{output/p06_optimal_radius}.
+\end{enumerate}
+\end{document}
