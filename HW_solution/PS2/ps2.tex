@@ -73,6 +73,173 @@ where $P(y=1\mid x;\theta)=h_\theta(x)=1/(1+\exp(-\theta^\top x))$, $I_{a,b}=\{i
 \end{enumerate}
 \textit{Remark:} We considered the range $(a,b)=(0,1)$. This is the only range for which logistic regression is guaranteed to be calibrated on the training set. When the GLM modeling assumptions hold, all ranges $(a,b)\subset[0,1]$ are well calibrated. In addition, when the training and test set are from the same distribution and when the model has not overfit or underfit, logistic regression tends to be well-calibrated on unseen test data as well. This makes logistic regression a very popular model in practice, especially when we are interested in the level of uncertainty in the model output.
 
+
+\medskip
+\noindent\colorbox{yellow}{\textbf{Solution.}}
+\vspace{3mm}
+
+\noindent\textbf{(a)}
+
+Let $p_i=h_\theta(x^{(i)})$. The log-likelihood of
+logistic regression is
+\[
+\ell(\theta)
+=
+\sum_{i=1}^{m}
+\left[
+y^{(i)}\log p_i+
+(1-y^{(i)})\log(1-p_i)
+\right].
+\]
+
+Recall that
+\[
+\nabla_\theta\ell(\theta)
+=
+\sum_{i=1}^{m}
+(y^{(i)}-p_i)x^{(i)}.
+\]
+
+Since $x_0^{(i)}=1$ for all $i$, the first-order
+optimality condition at the MLE $\theta^*$ gives
+\[
+0=
+\frac{\partial\ell(\theta^*)}{\partial\theta_0}
+=
+\sum_{i=1}^{m}
+\left(y^{(i)}-h_{\theta^*}(x^{(i)})\right).
+\]
+
+Hence,
+\[
+\boxed{
+\frac{1}{m}\sum_{i=1}^{m}
+h_{\theta^*}(x^{(i)})
+=
+\frac{1}{m}\sum_{i=1}^{m}
+\mathbb I\{y^{(i)}=1\}.
+}
+\]
+
+Since $h_{\theta^*}(x^{(i)})\in(0,1)$,
+we have $I_{0,1}=\{1,\ldots,m\}$.
+Thus the required calibration property holds
+over $(a,b)=(0,1)$.
+\hfill$\square$
+
+\bigskip
+\noindent\textbf{(b)}
+
+\textbf{Perfect calibration does not imply
+perfect accuracy.}
+
+Consider four examples with predicted probabilities
+\[
+p_1=p_2=p_3=p_4=\frac34
+\]
+and true labels
+\[
+(y^{(1)},y^{(2)},y^{(3)},y^{(4)})
+=(1,1,1,0).
+\]
+
+For any interval $(a,b)$ containing $3/4$,
+\[
+\frac{1}{|I_{a,b}|}
+\sum_{i\in I_{a,b}}p_i
+=
+\frac34
+=
+\frac{1}{|I_{a,b}|}
+\sum_{i\in I_{a,b}}y^{(i)}.
+\]
+All other intervals select no examples.
+Hence the model is perfectly calibrated,
+but its classification accuracy (with threshold $1/2$)
+is only $3/4$.
+
+\medskip
+\noindent\textbf{Conversely, perfect accuracy does
+not imply perfect calibration.}
+
+Consider a single example with
+\[
+y^{(1)}=1,\qquad p_1=0.8.
+\]
+
+Its predicted class is $1$, so accuracy is $100\%$.
+However, for any interval containing $0.8$,
+\[
+\frac{1}{|I_{a,b}|}
+\sum_{i\in I_{a,b}}p_i
+=0.8\neq1
+=
+\frac{1}{|I_{a,b}|}
+\sum_{i\in I_{a,b}}y^{(i)}.
+\]
+
+Therefore,
+\[
+\boxed{
+\text{Perfect calibration}
+\not\Rightarrow
+\text{Perfect accuracy},
+}
+\]
+and the converse is also false.
+\hfill$\square$
+
+\bigskip
+\noindent\textbf{(c)}
+
+Suppose we maximize the L2-regularized
+log-likelihood
+\[
+J(\theta)
+=
+\ell(\theta)-\frac{\lambda}{2}\|\theta\|_2^2,
+\qquad \lambda>0.
+\]
+
+If the intercept $\theta_0$ is regularized,
+the first-order optimality condition becomes
+\[
+0=
+\frac{\partial J(\theta^*)}{\partial\theta_0}
+=
+\sum_{i=1}^{m}
+\left(y^{(i)}-h_{\theta^*}(x^{(i)})\right)
+-\lambda\theta_0^*.
+\]
+
+Therefore,
+\[
+\boxed{
+\sum_{i=1}^{m}h_{\theta^*}(x^{(i)})
+=
+\sum_{i=1}^{m}y^{(i)}
+-\lambda\theta_0^*.
+}
+\]
+
+Thus the calibration equality proved in (a)
+is no longer guaranteed.
+
+However, if the intercept is excluded from
+regularization, its first-order condition
+remains unchanged, and the calibration property
+over $(0,1)$ still holds.
+
+On unseen data, L2 regularization may improve
+calibration by reducing overfitting, although
+such improvement is not guaranteed.
+\hfill$\square$
+
+
+
+
+
+
 \problem{3}{[20 points] Bayesian Interpretation of Regularization}
 \textbf{Background:} In Bayesian statistics, almost every quantity is a random variable, which can either be observed, or unobserved. For instance, parameters $\theta$ are generally unobserved random variables, and data $x$ and $y$ are observed random variables. The joint distribution of all the random variables is also called the model (e.g $p(x,y,\theta)$). Every unknown quantity can be estimated by conditioning the model on all the observed quantities. Such a conditional distribution over the unobserved random variables, conditioned on the observed random variables, is called the posterior distribution. For instance $p(\theta\mid x,y)$ is the posterior distribution in the machine learning context. A consequence of this approach is that, we are required to endow our model parameters, i.e.\ $p(\theta)$, with a prior distribution. The prior probabilities are to be assigned before we see the data -- they need to capture our prior beliefs of what the model parameters might be before observing any evidence, and must be a subjective opinion by the person building the model.
 
@@ -848,6 +1015,325 @@ where $\theta^{(i)}$ is the value of the parameters after the algorithm has seen
 \item \textbf{[5 points]} Implement your approach by completing the \code{initial_state}, \code{predict}, and \code{update_state} methods of \code{src/p05_percept.py}.
 \item \textbf{[2 points]} Run \code{src/p05_percept.py} to train kernelized perceptrons on \code{data/ds5_train.csv}. The code will then test the perceptron on \code{data/ds5_test.csv} and save the resulting predictions in the \code{src/output} folder. Plots will also be saved in \code{src/output}. We provide two kernels, a dot product kernel and an radial basis function (rbf) kernel. One of the provided kernels performs extremely poorly in classifying the points. Which kernel performs badly and why does it fail?
 \end{enumerate}
+
+
+\medskip
+\noindent\colorbox{yellow}{\textbf{Solution.}}
+\vspace{3mm}
+
+Let $\phi:\mathbb R^d\to\mathcal H$ be the feature
+mapping associated with the Mercer kernel $K$, where
+$\mathcal H$ is a possibly infinite-dimensional
+Hilbert space. Thus,
+\[
+K(x,z)=\langle\phi(x),\phi(z)\rangle_{\mathcal H}.
+\]
+
+The perceptron is initialized at $\theta^{(0)}=0$
+and processes the training examples sequentially,
+using the update rule
+\[
+\theta^{(i+1)}
+=
+\theta^{(i)}
++
+\alpha\left(
+y^{(i+1)}
+-h_{\theta^{(i)}}(x^{(i+1)})
+\right)\phi(x^{(i+1)}),
+\]
+where
+\[
+h_{\theta^{(i)}}(x)
+=
+g\left(
+\langle\theta^{(i)},\phi(x)\rangle_{\mathcal H}
+\right).
+\]
+
+\bigskip
+\noindent\textbf{(a)(i) Implicit Representation of $\theta^{(i)}$.}
+
+\medskip
+\noindent\textbf{Claim.}
+For every $i\in\{0,\ldots,n\}$, there exist
+coefficients $\beta_1,\ldots,\beta_i\in\mathbb R$
+such that
+\[
+\boxed{
+\theta^{(i)}
+=
+\sum_{j=1}^{i}\beta_j\phi(x^{(j)}).
+}
+\]
+
+\noindent\textbf{Proof.}
+We proceed by mathematical induction on $i$.
+
+\textit{Base Case ($i=0$).}
+Since $\theta^{(0)}=0$, we have
+\[
+\theta^{(0)}
+=
+\sum_{j=1}^{0}\beta_j\phi(x^{(j)})=0,
+\]
+where the empty sum is defined to be zero.
+Thus the claim holds for $i=0$.
+
+\textit{Inductive Hypothesis.}
+Suppose that, for some $0\leq i<n$,
+\[
+\theta^{(i)}
+=
+\sum_{j=1}^{i}\beta_j\phi(x^{(j)}).
+\]
+
+\textit{Inductive Step.}
+By the perceptron update rule,
+\[
+\begin{aligned}
+\theta^{(i+1)}
+&=
+\theta^{(i)}
++
+\alpha\left(
+y^{(i+1)}
+-h_{\theta^{(i)}}(x^{(i+1)})
+\right)\phi(x^{(i+1)})\\
+&=
+\sum_{j=1}^{i}\beta_j\phi(x^{(j)})
++
+\alpha\left(
+y^{(i+1)}
+-h_{\theta^{(i)}}(x^{(i+1)})
+\right)\phi(x^{(i+1)}).
+\end{aligned}
+\]
+
+Define
+\[
+\beta_{i+1}
+=
+\alpha\left(
+y^{(i+1)}
+-h_{\theta^{(i)}}(x^{(i+1)})
+\right).
+\]
+
+It follows that
+\[
+\theta^{(i+1)}
+=
+\sum_{j=1}^{i+1}\beta_j\phi(x^{(j)}).
+\]
+
+Hence the claim holds for $i+1$, completing
+the induction.
+
+Therefore, for every $i$, the parameter
+$\theta^{(i)}$ lies in
+\[
+\operatorname{span}
+\{\phi(x^{(1)}),\ldots,\phi(x^{(i)})\}.
+\]
+
+Consequently, instead of explicitly storing
+the possibly infinite-dimensional vector
+$\theta^{(i)}$, we may store only the
+coefficients $\beta_1,\ldots,\beta_i$ and
+their corresponding training inputs.
+\hfill$\square$
+
+\bigskip
+\noindent\textbf{(a)(ii) Kernelized Prediction.}
+
+\medskip
+\noindent\textbf{Proof.}
+Before processing the $(i+1)$-th training
+example, the perceptron predicts
+\[
+h_{\theta^{(i)}}(x^{(i+1)})
+=
+g\left(
+\langle\theta^{(i)},\phi(x^{(i+1)})\rangle_{\mathcal H}
+\right).
+\]
+
+By part (i),
+\[
+\theta^{(i)}
+=
+\sum_{j=1}^{i}\beta_j\phi(x^{(j)}).
+\]
+
+Substituting this representation yields
+\[
+\begin{aligned}
+h_{\theta^{(i)}}(x^{(i+1)})
+&=
+g\left(
+\left\langle
+\sum_{j=1}^{i}\beta_j\phi(x^{(j)}),
+\phi(x^{(i+1)})
+\right\rangle_{\mathcal H}
+\right)\\
+&=
+g\left(
+\sum_{j=1}^{i}\beta_j
+\langle
+\phi(x^{(j)}),\phi(x^{(i+1)})
+\rangle_{\mathcal H}
+\right).
+\end{aligned}
+\]
+
+Since $K$ is the kernel associated with $\phi$,
+\[
+\langle\phi(x^{(j)}),\phi(x^{(i+1)})\rangle_{\mathcal H}
+=
+K(x^{(j)},x^{(i+1)}).
+\]
+
+Therefore,
+\[
+\boxed{
+h_{\theta^{(i)}}(x^{(i+1)})
+=
+g\left(
+\sum_{j=1}^{i}
+\beta_jK(x^{(j)},x^{(i+1)})
+\right).
+}
+\]
+
+Thus the prediction can be computed entirely
+using the stored coefficients, the original
+training inputs, and evaluations of $K$,
+without explicitly constructing either
+$\phi(x)$ or $\theta^{(i)}$.
+\hfill$\square$
+
+\bigskip
+\noindent\textbf{(a)(iii) Kernelized Parameter Update.}
+
+\medskip
+\noindent\textbf{Proof.}
+The original perceptron update in feature
+space is
+\[
+\theta^{(i+1)}
+=
+\theta^{(i)}
++
+\alpha\left(
+y^{(i+1)}
+-h_{\theta^{(i)}}(x^{(i+1)})
+\right)\phi(x^{(i+1)}).
+\]
+
+From part (i), we have
+\[
+\theta^{(i)}
+=
+\sum_{j=1}^{i}\beta_j\phi(x^{(j)}).
+\]
+
+Hence
+\[
+\begin{aligned}
+\theta^{(i+1)}
+&=
+\sum_{j=1}^{i}\beta_j\phi(x^{(j)})\\
+&\quad+
+\alpha\left(
+y^{(i+1)}
+-h_{\theta^{(i)}}(x^{(i+1)})
+\right)\phi(x^{(i+1)}).
+\end{aligned}
+\]
+
+To preserve the implicit representation,
+it suffices to leave all previous
+coefficients unchanged and define
+\[
+\beta_{i+1}
+=
+\alpha\left(
+y^{(i+1)}
+-h_{\theta^{(i)}}(x^{(i+1)})
+\right).
+\]
+
+By the kernelized prediction formula
+established in part (ii),
+\[
+h_{\theta^{(i)}}(x^{(i+1)})
+=
+g\left(
+\sum_{j=1}^{i}
+\beta_jK(x^{(j)},x^{(i+1)})
+\right).
+\]
+
+Substituting gives the coefficient update
+\[
+\boxed{
+\beta_{i+1}
+=
+\alpha\left[
+y^{(i+1)}
+-
+g\left(
+\sum_{j=1}^{i}
+\beta_jK(x^{(j)},x^{(i+1)})
+\right)
+\right].
+}
+\]
+
+All previous coefficients
+$\beta_1,\ldots,\beta_i$ remain unchanged.
+The resulting implicit parameter satisfies
+\[
+\theta^{(i+1)}
+=
+\sum_{j=1}^{i+1}\beta_j\phi(x^{(j)}).
+\]
+
+After processing all $n$ training examples,
+the final classifier can therefore be
+evaluated on any new input $x$ as
+\[
+\boxed{
+h_{\theta^{(n)}}(x)
+=
+g\left(
+\sum_{j=1}^{n}
+\beta_jK(x^{(j)},x)
+\right).
+}
+\]
+
+Thus both training and prediction can be
+implemented entirely through kernel
+evaluations and scalar coefficients,
+without explicitly representing vectors
+in the high-dimensional feature space.
+\hfill$\square$
+
+\textbf{(c)} The dot product kernel performs poorly, since the feature map is just $phi(x) = x$, hence we are performing linear classification in the original input space $\mathbb{R}^2$, since the dataset in the original input space
+is not linear separable, it's destined that the dot-product kernel performs poorly.
+
+\vspace{3mm}
+Note, this example is a great illustration of identifying non-linear decision
+boundary in the original input space induced by the higher dimensional feature space.
+Mathematically, we can describe this as mapping composition: Denote the original input space by $X = \mathbb{R}^2$, 
+and the feature space by $\mathbb{H}$, then we have: $\phi: \mathbb{R}^2 \to \mathbb{H}$, and that $F: \mathbb{H} \to \mathbb{R}$ by $F(z) = <\theta, z> + b$. 
+Now define f as the composite: $f(x) = F(\phi(x)) = <\theta, \phi(x)> + b$. The key is to realize that the decision boundary in the original space corresponds to 
+the boundary $f(x) = 0$, since $x \in \{x | f(x) = 0\}$ corresponds to the case where $z \in \{z | F(z) = 0\}$, where the latter is the linear decision boundary in the feature space.
+
+
+
 
 \problem{6}{[22 points] Spam classification}
 In this problem, we will use the naive Bayes algorithm and an SVM to build a spam classifier. In recent years, spam on electronic media has been a growing concern. Here, we'll build a classifier to distinguish between real messages, and spam messages. For this class, we will be building a classifier to detect SMS spam messages. We will be using an SMS spam dataset developed by Tiago A. Almedia and Jos\'e Mar\'ia G\'omez Hidalgo which is publicly available on \url{http://www.dt.fee.unicamp.br/~tiago/smsspamcollection}\footnote{Almeida, T.A., G\'omez Hidalgo, J.M., Yamakami, A. Contributions to the Study of SMS Spam Filtering: New Collection and Results. Proceedings of the 2011 ACM Symposium on Document Engineering (DOCENG'11), Mountain View, CA, USA, 2011.}

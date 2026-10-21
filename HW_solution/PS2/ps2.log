@@ -358,17 +358,17 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 
 ] [3
 
-] [4
+] [4] [5] [6
 
-] [5] [6
+] [7] [8
 
-] [7] [8] [9] [10] [11] [12] [13] [14] [15
+] [9] [10] [11] [12] [13] [14] [15]
+[16] [17
 
-]
-[16
+] [18] [19] [20] [21
 
-] [17] (ps2.aux)
+] [22] (ps2.aux)
 Package rerunfilecheck Info: File `ps2.out' has not changed.
 (rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
  )
-Output written on ps2.xdv (17 pages, 265384 bytes).
+Output written on ps2.xdv (22 pages, 317620 bytes).

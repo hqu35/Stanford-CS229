@@ -1,5 +1,4 @@
 import math
-
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -16,6 +15,11 @@ def initial_state():
     """
 
     # *** START CODE HERE ***
+    return{
+        "examples": [],
+        "coefficients": []
+    }
+
     # *** END CODE HERE ***
 
 
@@ -33,6 +37,14 @@ def predict(state, kernel, x_i):
         Returns the prediction (i.e 0 or 1)
     """
     # *** START CODE HERE ***
+    score = 0.0
+    for x_j, beta_j in zip(
+        state["examples"], state["coefficients"]
+    ):
+        score += beta_j * kernel(x_j, x_i)
+    return sign(score)
+    # Note that g is just the sign function sign()
+
     # *** END CODE HERE ***
 
 
@@ -47,6 +59,15 @@ def update_state(state, kernel, learning_rate, x_i, y_i):
         y_i: A 0 or 1 indicating the label for a single instance
     """
     # *** START CODE HERE ***
+    # update the parameter beta_i
+    prediction = predict(state, kernel, x_i)
+    beta_new = learning_rate * (y_i  - prediction)
+    if(beta_new != 0):
+        state["examples"].append(np.array(x_i, copy = True)) # pass a new copy of the same data x_i into examples, doesn'e share the same address of the previous x_i
+        state["coefficients"].append(beta_new)
+    
+    # hence update \theta_i
+
     # *** END CODE HERE ***
 
 
